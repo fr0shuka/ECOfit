@@ -1,0 +1,10 @@
+# Ambiente virtual local
+venv/
+.venv/
+
+# Pastas de configuração local do Streamlit (onde vão ficar as chaves)
+.streamlit/
+
+# Arquivos temporários e cache do Python
+__pycache__/
+*.pyc
