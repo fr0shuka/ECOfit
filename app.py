@@ -3,7 +3,7 @@ from views.login_view import LoginView
 from views.dashboard_view import DashboardView
 from views.admin_view import AdminView
 
-st.set_page_config(page_title="EcoFit Platform", page_icon="🌱", layout="wide")
+st.set_page_config(page_title="EcoFIT", page_icon="🌱", layout="wide")
 
 # Fluxo de navegação baseado no estado da sessão
 if 'utilizador_logado' not in st.session_state:
