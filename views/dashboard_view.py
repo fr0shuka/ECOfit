@@ -30,6 +30,4 @@ class DashboardView:
             
             submetido = st.form_submit_button("Submeter Atividade", use_container_width=True)
             
-            if submetido:
-                # Dispara a ação para o Controlador processar
-                ActivityController.processar_registo_manual(km, minutos, agua, fruta, temp, clima)
+          
