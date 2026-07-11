@@ -26,7 +26,7 @@ else:
     
     # Se for Administrador, mostra a opção de gerir acessos na barra principal ou abas
     if utilizador['perfil'] == 'Admin':
-        aba_app, aba_admin = st.tabs(["🚀 Inserir Atividade", "🛡️ Gerir Pedidos Pendentes"])
+        aba_app, aba_admin = st.tabs(["Inserir Atividade", "Gerir pedidos Pendentes"])
         with aba_app:
             DashboardView.renderizar_formulario()
         with aba_admin:
