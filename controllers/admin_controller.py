@@ -17,19 +17,26 @@ class AdminController:
         # 1. Validação de Formato (Regex)
         padrao = r"^[a-zA-Z0-9À-ÿ]+$"
         if not re.match(padrao, nome_limpo):
-            return False, "O nome não pode conter espaços nem carateres especiais!"
+            return False, "⚠️ O nome não pode conter espaços nem carateres especiais!"
             
         # 2. Validação de Existência na Base de Dados (Unicidade)
         utilizador_existente = UserModel.buscar_por_nome(nome_limpo)
         if utilizador_existente:
-            return False, "Este nome já está registado na plataforma. Escolha outro ou faça login."
+            return False, "❌ Este nome já está registado na plataforma. Escolha outro ou faça login."
             
         # Se passou em ambos os testes
-        return True, "Nome válido e disponível!"
+        return True, "✅ Nome válido e disponível!"
     
     @staticmethod
     def solicitar_registo(nome: str) -> bool:
-        """Processa a inserção após validação bem-sucedida."""
+        """Processa a inserção apenas se passar na validação de segurança final."""
+        # 🛡️ BARREIRA DE SEGURANÇA FINAL: Revalida o dado antes de falar com a BD
+        sucesso_validacao, mensagem = AdminController.validar_nome_registo(nome)
+        
+        if not sucesso_validacao:
+            st.error(mensagem)
+            return False
+            
         sucesso = UserModel.criar_utilizador_pendente(nome)
         if sucesso:
             st.success("🎉 Pedido submetido! Aguarde a aprovação do Administrador.")
