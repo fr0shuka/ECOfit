@@ -1,3 +1,4 @@
+import re
 import streamlit as st
 from models.user_model import UserModel
 
