@@ -9,23 +9,22 @@ class AdminController:
         Função unificada de validação.
         Retorna um tuplo: (True/False, "Mensagem de feedback para o utilizador")
         """
-        nome_limpo = nome.strip()
-        
-        if not nome_limpo:
+        if not nome:
             return False, "O campo do nome não pode estar vazio."
             
-        # 1. Validação de Formato (Regex)
+        # 1. VALIDAÇÃO DE FORMATO DIRETA (Sem fazer strip primeiro)
+        # Se houver um espaço no início ou fim, o Regex deteta e bloqueia logo aqui!
         padrao = r"^[a-zA-Z0-9À-ÿ]+$"
-        if not re.match(padrao, nome_limpo):
-            return False, "⚠️ O nome não pode conter espaços nem carateres especiais!"
+        if not re.match(padrao, nome):
+            return False, "O nome não pode conter espaços (nem no início/fim) nem carateres especiais!"
             
         # 2. Validação de Existência na Base de Dados (Unicidade)
+        nome_limpo = nome.strip()
         utilizador_existente = UserModel.buscar_por_nome(nome_limpo)
         if utilizador_existente:
-            return False, "❌ Este nome já está registado na plataforma. Escolha outro ou faça login."
+            return False, "Este nome já está registado na plataforma. Escolha outro ou faça login."
             
-        # Se passou em ambos os testes
-        return True, "✅ Nome válido e disponível!"
+        return True, "Nome válido e disponível!"
     
     @staticmethod
     def solicitar_registo(nome: str) -> bool:
