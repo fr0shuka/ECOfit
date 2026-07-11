@@ -11,7 +11,6 @@ A aplicação utiliza uma arquitetura puramente assente no padrão **MVC (Model-
 *   **Linguagem:** Python 3.14+
 *   **Interface Web (Frontend):** Streamlit
 *   **Base de Dados & Autenticação (Backend):** Supabase (PostgreSQL via HTTPS)
-*   **Gestor de Dependências:** `uv` / `pip`
 
 ---
 
