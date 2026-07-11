@@ -1,6 +1,6 @@
 import streamlit as st
 
-class DashboardView:
+class AdminView:
     @staticmethod
     def renderizar_formulario():
         """Ecrã provisório do atleta após o login."""
