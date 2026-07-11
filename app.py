@@ -1,16 +1,36 @@
 import streamlit as st
 from views.login_view import LoginView
+from views.dashboard_view import DashboardView
+from views.admin_view import AdminView
 
-# Se o utilizador não está logado, mostra o ecrã de login
+st.set_page_config(page_title="EcoFit Platform", page_icon="🌱", layout="wide")
+
+# Fluxo de navegação baseado no estado da sessão
 if 'utilizador_logado' not in st.session_state:
     LoginView.renderizar_ecran()
 else:
-    # Se já estiver logado, mostra o conteúdo do MVP (vamos criar a seguir)
     utilizador = st.session_state['utilizador_logado']
-    st.title(f"💪 Painel do Atleta: {utilizador['nome']}")
-    st.info(f"Perfil: {utilizador['perfil']} | Estado: {utilizador['estado']}")
     
-    if st.button("Sair"):
-        from controllers.auth_controller import AuthController
-        AuthController.logout()
-        st.rerun()
+    # Barra Lateral
+    with st.sidebar:
+        st.markdown(f"### Olá, **{utilizador['nome']}**")
+        st.caption(f"Perfil: {utilizador['perfil']} | Estado: {utilizador['estado']}")
+        st.markdown("---")
+        
+        if st.button("Terminar Sessão (Logout)", use_container_width=True):
+            from controllers.auth_controller import AuthController
+            AuthController.logout()
+            st.rerun()
+
+    st.title("💪 Painel de Performance EcoFit")
+    
+    # Se for Administrador, mostra a opção de gerir acessos na barra principal ou abas
+    if utilizador['perfil'] == 'Admin':
+        aba_app, aba_admin = st.tabs(["🚀 Inserir Atividade", "🛡️ Gerir Pedidos Pendentes"])
+        with aba_app:
+            DashboardView.renderizar_formulario()
+        with aba_admin:
+            AdminView.renderizar_painel_admin()
+    else:
+        # Atleta normal vê apenas o formulário de atividades
+        DashboardView.renderizar_formulario()

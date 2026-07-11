@@ -3,24 +3,38 @@ from models.user_model import UserModel
 
 class AdminController:
     @staticmethod
+    def validar_nome_registo(nome: str) -> tuple[bool, str]:
+        """
+        Função unificada de validação.
+        Retorna um tuplo: (True/False, "Mensagem de feedback para o utilizador")
+        """
+        nome_limpo = nome.strip()
+        
+        if not nome_limpo:
+            return False, "O campo do nome não pode estar vazio."
+            
+        # 1. Validação de Formato (Regex)
+        padrao = r"^[a-zA-Z0-9À-ÿ]+$"
+        if not re.match(padrao, nome_limpo):
+            return False, "O nome não pode conter espaços nem carateres especiais!"
+            
+        # 2. Validação de Existência na Base de Dados (Unicidade)
+        utilizador_existente = UserModel.buscar_por_nome(nome_limpo)
+        if utilizador_existente:
+            return False, "Este nome já está registado na plataforma. Escolha outro ou faça login."
+            
+        # Se passou em ambos os testes
+        return True, "Nome válido e disponível!"
+    
+    @staticmethod
     def solicitar_registo(nome: str) -> bool:
-        """Processa o pedido de um novo atleta para entrar no sistema."""
-        if not nome.strip():
-            st.warning("Introduz um nome válido para o registo.")
-            return False
-            
-        # Verifica se o nome já existe
-        existente = UserModel.buscar_por_nome(nome)
-        if existente:
-            st.error("Esse nome já se encontra registado no sistema. Tenta fazer login.")
-            return False
-            
+        """Processa a inserção após validação bem-sucedida."""
         sucesso = UserModel.criar_utilizador_pendente(nome)
         if sucesso:
-            st.success("🎉 Pedido submetido com sucesso! Aguarda a aprovação do Administrador.")
+            st.success("🎉 Pedido submetido! Aguarde a aprovação do Administrador.")
             return True
         else:
-            st.error("Erro ao submeter o pedido. Tenta novamente.")
+            st.error("Erro ao submeter o pedido. Tente novamente.")
             return False
 
     @staticmethod
