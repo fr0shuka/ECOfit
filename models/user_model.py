@@ -7,7 +7,7 @@ from config.database import get_supabase_client
 class UserModel:
     @staticmethod
     def buscar_por_nome(nome: str):
-        """Busca um utilizador pelo nome exato."""
+        ###Busca um utilizador pelo nome exato.###
         supabase = get_supabase_client()
         resposta = supabase.table('bd_utilizadores').select('*').eq('nome', nome).execute()
         if resposta.data:
@@ -16,7 +16,7 @@ class UserModel:
 
     @staticmethod
     def criar_utilizador_pendente(nome: str) -> bool:
-        """Regista um novo atleta com estado Pendente e perfil Atleta."""
+        ###Regista um novo atleta com estado Pendente e perfil Atleta###
         try:
             supabase = get_supabase_client()
             payload = {
@@ -32,7 +32,7 @@ class UserModel:
 
     @staticmethod
     def listar_pendentes():
-        """Retorna uma lista com todos os utilizadores em estado Pendente."""
+        ###Retorna uma lista com todos os utilizadores em estado Pendente.###
         try:
             supabase = get_supabase_client()
             resposta = supabase.table('bd_utilizadores').select('*').eq('estado', 'Pendente').execute()
@@ -43,7 +43,7 @@ class UserModel:
 
     @staticmethod
     def atualizar_estado(utilizador_id: int, novo_estado: str) -> bool:
-        """Atualiza o estado de um utilizador (ex: para 'Aprovado')."""
+        ###Atualiza o estado de um utilizador (ex: para 'Aprovado').###
         try:
             supabase = get_supabase_client()
             supabase.table('bd_utilizadores').update({"estado": novo_estado}).eq("utilizador_id", utilizador_id).execute()
@@ -54,7 +54,7 @@ class UserModel:
 
     @staticmethod
     def eliminar_utilizador(utilizador_id: int) -> bool:
-        """Remove um pedido de registo da base de dados."""
+        ###Remove um pedido de registo da base de dados.###
         try:
             supabase = get_supabase_client()
             supabase.table('bd_utilizadores').delete().eq("utilizador_id", utilizador_id).execute()
