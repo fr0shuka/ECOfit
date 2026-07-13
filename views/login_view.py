@@ -45,7 +45,7 @@ class LoginView:
 
         # 🎯 Apresentação Centrada do Emoji (sem ficheiros externos) e Título
         st.markdown("<h1 style='text-align: center; font-size: 80px; margin-bottom: 0px;'>🌱</h1>", unsafe_allow_html=True)
-        st.markdown("<h2 style='text-align: center; color: ##99c33a; margin-top: 0px; margin-bottom: 25px;'>EcoFIT</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #99c33a; margin-top: 0px; margin-bottom: 25px;'>EcoFIT</h2>", unsafe_allow_html=True)
         
         # Abas para separar o login do pedido de novo registo
         aba_login, aba_registo = st.tabs(["🔑 Iniciar Sessão", "📝 Novo Registo"])
