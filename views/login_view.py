@@ -6,7 +6,7 @@ from controllers.admin_controller import AdminController
 class LoginView:
     @staticmethod
     def renderizar_ecran():
-        """Desenha a interface de autenticação customizada em tons de cinza e verde."""
+        """Desenha a interface de autenticação centrada com emoji e tons de cinza/verde."""
         
         # 🎨 Injeção de CSS Customizado para controlo estrito da palete de cores
         st.markdown("""
@@ -43,13 +43,9 @@ class LoginView:
             </style>
         """, unsafe_allow_html=True)
 
-        # 🎯 Apresentação Centrada do Logotipo e do Título
-        col_logo_esq, col_logo_centro, col_logo_dir = st.columns([1, 2, 1])
-        with col_logo_centro:
-            # Apresenta o logotipo na página inicial centrado
-            st.image("🌱", use_container_width=True)
-            
-        st.markdown("<h2 style='text-align: center; color: #333333; margin-bottom: 25px;'>🌱 EcoFIT</h2>", unsafe_html=True)
+        # 🎯 Apresentação Centrada do Emoji (sem ficheiros externos) e Título
+        st.markdown("<h1 style='text-align: center; font-size: 80px; margin-bottom: 0px;'>🌱</h1>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align: center; color: #333333; margin-top: 0px; margin-bottom: 25px;'>EcoFIT</h2>", unsafe_allow_html=True)
         
         # Abas para separar o login do pedido de novo registo
         aba_login, aba_registo = st.tabs(["🔑 Iniciar Sessão", "📝 Novo Registo"])
