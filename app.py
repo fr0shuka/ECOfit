@@ -3,7 +3,12 @@ from views.login_view import LoginView
 from views.dashboard_view import DashboardView
 from views.admin_view import AdminView
 
-st.set_page_config(page_title="EcoFIT", page_icon="🌱", layout="wide")
+# Configuração centrada e aplicação do Logotipo no separador do navegador
+st.set_page_config(
+    page_title="EcoFIT", 
+    page_icon="🌱", 
+    layout="centered"             # Força o layout a ficar centrado e compacto
+)
 
 # Fluxo de navegação baseado no estado da sessão
 if 'utilizador_logado' not in st.session_state:
@@ -24,13 +29,11 @@ else:
 
     st.title("💪 Painel de Performance EcoFit")
     
-    # Se for Administrador, mostra a opção de gerir acessos na barra principal ou abas
     if utilizador['perfil'] == 'Admin':
-        aba_app, aba_admin = st.tabs(["Inserir Atividade", "Gerir pedidos Pendentes"])
+        aba_app, aba_admin = st.tabs(["🚀 Inserir Atividade", "🛡️ Gerir Pedidos Pendentes"])
         with aba_app:
             DashboardView.renderizar_formulario()
         with aba_admin:
             AdminView.renderizar_painel_admin()
     else:
-        # Atleta normal vê apenas o formulário de atividades
         DashboardView.renderizar_formulario()
