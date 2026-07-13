@@ -41,7 +41,7 @@ class LoginView:
                 
                 #MainMenu, footer {visibility: hidden;}
             </style>
-        """, unsafe_html=True)
+        """, unsafe_allow_html=True)
 
         # 🎯 Apresentação Centrada do Logotipo e do Título
         col_logo_esq, col_logo_centro, col_logo_dir = st.columns([1, 2, 1])
