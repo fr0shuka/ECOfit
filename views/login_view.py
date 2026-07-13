@@ -47,7 +47,7 @@ class LoginView:
         col_logo_esq, col_logo_centro, col_logo_dir = st.columns([1, 2, 1])
         with col_logo_centro:
             # Apresenta o logotipo na página inicial centrado
-            st.image("assets/logo.png", use_container_width=True)
+            st.image("🌱", use_container_width=True)
             
         st.markdown("<h2 style='text-align: center; color: #333333; margin-bottom: 25px;'>🌱 EcoFIT</h2>", unsafe_html=True)
         
