@@ -2,6 +2,7 @@ import streamlit as st
 from views.login_view import LoginView
 from views.dashboard_view import DashboardView
 from views.admin_view import AdminView
+from views.upload_view import UploadView
 
 # Configuração centrada e aplicação do Logotipo no separador do navegador
 st.set_page_config(
@@ -30,10 +31,18 @@ else:
     st.title("💪 Painel de Performance EcoFit")
     
     if utilizador['perfil'] == 'Admin':
-        aba_app, aba_admin = st.tabs(["🚀 Inserir Atividade", "🛡️ Gerir Pedidos Pendentes"])
+        # Admin vê 3 abas agora
+        aba_app, aba_upload, aba_admin = st.tabs(["🚀 Inserir Atividade", "📥 Sincronizar Ficheiro", "🛡️ Gerir Pedidos Pendentes"])
         with aba_app:
             DashboardView.renderizar_formulario()
+        with aba_upload:
+            UploadView.renderizar_zona_upload()
         with aba_admin:
             AdminView.renderizar_painel_admin()
     else:
-        DashboardView.renderizar_formulario()
+        # Atleta normal vê 2 abas
+        aba_app, aba_upload = st.tabs(["🚀 Inserir Atividade", "📥 Sincronizar Ficheiro"])
+        with aba_app:
+            DashboardView.renderizar_formulario()
+        with aba_upload:
+            UploadView.renderizar_zona_upload()
