@@ -100,7 +100,7 @@ class FileController:
             "copos_agua": 0,
             "pecas_fruta": 0,
             "pontos_ganhos": pontos,
-            "tipo_insercao": "Automático",
+            "tipo_insercao": "Automatico",
             "temperatura": 20.0,
             "condicao_clima": "Sincronizado"
         }
