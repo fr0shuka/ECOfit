@@ -14,9 +14,18 @@ class DashboardView:
         
         with st.form("form_atividade", clear_on_submit=True):
             col1, col2 = st.columns(2)
+            
             with col1:
                 km = st.number_input("Quilómetros Corridos (km)", min_value=0.0, step=0.1)
-                minutos = st.number_input("Tempo de Treino (minutos)", min_value=0, step=1)
+                
+                # ⏱️ Divisão de Tempo: Horas e Minutos
+                st.caption("Duração do Treino:")
+                col_h, col_m = st.columns(2)
+                with col_h:
+                    horas = st.number_input("Horas", min_value=0, step=1, value=0)
+                with col_m:
+                    minutos_input = st.number_input("Minutos", min_value=0, max_value=59, step=1, value=0)
+            
             with col2:
                 copos = st.number_input("Copos de Água", min_value=0, step=1)
                 fruta = st.number_input("Peças de Fruta", min_value=0, step=1)
@@ -24,17 +33,22 @@ class DashboardView:
             submetido = st.form_submit_button("Salvar Atividade", use_container_width=True)
             
             if submetido:
-                if km == 0 and minutos == 0 and copos == 0 and fruta == 0:
+                # 🧹 LIMPEZA E CONVERSÃO: Transforma Horas + Minutos no Total de Minutos para a BD
+                total_minutos = int((horas * 60) + minutos_input)
+                
+                if km == 0 and total_minutos == 0 and copos == 0 and fruta == 0:
                     st.warning("⚠️ Preenche pelo menos um dos campos para registar a atividade.")
                 else:
                     id_utilizador = st.session_state['utilizador_logado']['utilizador_id']
-                    pontos = int((km * 10) + (minutos * 1) + (copos * 2) + (fruta * 5))
+                    
+                    # Cálculo de pontos com o tempo limpo/convertido
+                    pontos = int((km * 10) + (total_minutos * 1) + (copos * 2) + (fruta * 5))
                     
                     payload = {
                         "utilizador_id": id_utilizador,
                         "data_registo": str(date.today()),
                         "km_corridos": km,
-                        "minutos_treino": minutos,
+                        "minutos_treino": total_minutos, # Envia o total limpo em minutos
                         "copos_agua": copos,
                         "pecas_fruta": fruta,
                         "pontos_ganhos": pontos,
@@ -44,7 +58,7 @@ class DashboardView:
                     }
                     
                     if ActivityModel.salvar_atividade(payload):
-                        st.success(f"🎯 Atividade registada com sucesso! Ganhaste +{pontos} pontos.")
+                        st.success(f"🎯 Atividade registada com sucesso! Ganhaste +{pontos} pontos ({total_minutos} min acumulados).")
                         st.rerun()
 
         st.markdown("---")
@@ -76,7 +90,7 @@ class DashboardView:
         # 2. Exibição dos Cartões KPI
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("🏃 Distância", f"{df['km_corridos'].sum():.1f} km")
-        col2.metric("⏱️ Tempo", f"{int(df['minutos_treino'].sum())} min")
+        col2.metric("⏱️ Tempo Total", f"{int(df['minutos_treino'].sum())} min")
         col3.metric("💧 Hidratação", f"{int(df['copos_agua'].sum())} copos")
         col4.metric("🌱 Pontos", f"{int(df['pontos_ganhos'].sum())} pts")
 
