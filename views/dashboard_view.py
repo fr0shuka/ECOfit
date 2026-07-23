@@ -10,7 +10,7 @@ class DashboardView:
         """Renderiza a zona de registo de atividade e o painel analítico completo."""
         
         # --- ZONA 1: FORMULÁRIO DE REGISTO MANUAL ---
-        st.markdown("### 🚀 Registar Nova Atividade Manual")
+        st.markdown("### 🚀 Registar Atividade")
         
         with st.form("form_atividade", clear_on_submit=True):
             col1, col2 = st.columns(2)
@@ -19,7 +19,7 @@ class DashboardView:
                 km = st.number_input("Quilómetros Corridos (km)", min_value=0.0, step=0.1)
                 
                 # ⏱️ Divisão de Tempo: Horas e Minutos
-                st.caption("Duração do Treino:")
+                
                 col_h, col_m = st.columns(2)
                 with col_h:
                     horas = st.number_input("Horas", min_value=0, step=1, value=0)
