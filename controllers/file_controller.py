@@ -4,6 +4,7 @@ import streamlit as st
 from datetime import date
 from models.activity_model import ActivityModel
 
+
 class FileController:
     @staticmethod
     def processar_ficheiro_treino(ficheiro_carregado) -> bool:
@@ -30,17 +31,50 @@ class FileController:
 
             # --- CASO 2: Atividade Individual em GPX ---
             elif nome_ficheiro.endswith('.gpx'):
-                tree = ET.parse(ficheiro_carregado)
-                root = tree.getroot()
-                namespaces = {'gpx': 'http://www.topografix.com/GPX/1/1'}
-                
-                trackpoints = root.findall('.//gpx:trkpt', namespaces)
-                if trackpoints:
-                    minutos = int(len(trackpoints) / 4)
-                    km = round((len(trackpoints) * 0.005), 2)
+                import gpxpy
+                from geopy.distance import geodesic
+                from datetime import datetime
+
+                # Lê o conteúdo do ficheiro enviado
+                conteudo_gpx = ficheiro_carregado.read().decode('utf-8')
+                gpx = gpxpy.parse(conteudo_gpx)
+
+                total_metros = 0.0
+                primeiro_tempo = None
+                ultimo_tempo = None
+                ponto_anterior = None
+
+                for track in gpx.tracks:
+                    for segment in track.segments:
+                        for point in segment.points:
+                            # 1. Registo de Tempos
+                            if point.time:
+                                if primeiro_tempo is None:
+                                    primeiro_tempo = point.time
+                                ultimo_tempo = point.time
+
+                            # 2. Cálculo da Distância (Haversine/Geodesic entre pontos)
+                            if ponto_anterior is not None:
+                                coord1 = (ponto_anterior.latitude, ponto_anterior.longitude)
+                                coord2 = (point.latitude, point.longitude)
+                                total_metros += geodesic(coord1, coord2).meters
+
+                            ponto_anterior = point
+
+                if primeiro_tempo and ultimo_tempo:
+                    # Tempo total da atividade em minutos
+                    duracao_segundos = (ultimo_tempo - primeiro_tempo).total_seconds()
+                    minutos = int(duracao_segundos / 60)
+                    
+                    # Distância acumulada em quilómetros
+                    km = round(total_metros / 1000.0, 2)
+                    
+                    # Data real da atividade (YYYY-MM-DD)
+                    data_atividade = primeiro_tempo.strftime('%Y-%m-%d')
                 else:
-                    st.error("❌ Ficheiro GPX vazio ou sem pontos válidos.")
+                    st.error("❌ O ficheiro GPX não contém marcas temporais válidas.")
                     return False
+
 
             # --- CASO 3: Atividade Individual em TCX (Garmin/Strava) ---
             elif nome_ficheiro.endswith('.tcx'):
@@ -87,14 +121,14 @@ class FileController:
             return False
 
     @staticmethod
-    def _gravar_atividade_importada(km: float, minutos: int, nome_fonte: str) -> bool:
+    def _gravar_atividade_importada(km: float, minutos: int, nome_fonte: str, data_real: str = None) -> bool:
         """Aplica a regra de pontos do EcoFit e envia para a Base de Dados."""
         id_utilizador = st.session_state['utilizador_logado']['utilizador_id']
         pontos = int((km * 10) + (minutos * 1))
 
         payload = {
             "utilizador_id": id_utilizador,
-            "data_registo": str(date.today()),
+            "data_registo": data_real if data_real else str(date.today()),
             "km_corridos": km,
             "minutos_treino": minutos,
             "copos_agua": 0,
