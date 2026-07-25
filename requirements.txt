@@ -4,3 +4,4 @@ supabase
 plotly
 pytcx
 gpxpy
+geopy
