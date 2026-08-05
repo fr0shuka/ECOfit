@@ -1,49 +1,56 @@
-import streamlit as st
 import sys
 import os
+import streamlit as st
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from models.user_model import UserModel
 from controllers.admin_controller import AdminController
+
 
 class AdminView:
     @staticmethod
-    def renderizar_formulario():
-        """Ecrã provisório do atleta após o login."""
-        st.markdown("### 💪 Área do Atleta - EcoFit")
-        st.success("Sessão iniciada com sucesso! O teu acesso está ativo e validado.")
-        st.write("Este é o teu painel principal. O ambiente de login e registo está operacional.")
+    def renderizar_painel_admin():
+        # 1. Controlo de Acesso (Apenas Admins)
+        utilizador = st.session_state.get('utilizador_logado')
+        if not utilizador or utilizador.get('tipo_utilizador') != 'Admin':
+            st.error("⛔ Acesso restrito a administradores.")
+            return
 
+        st.title("🛡️ Painel de Administração")
+        st.subheader("Gestão de Novas Contas")
 
-    def login(nome_utilizador: str) -> bool:
-        nome_limpo = nome_utilizador.strip()
-        
-        if not nome_limpo:
-            st.warning("Por favor, introduz o teu nome.")
-            return False
-            
-        # 1. Chamar o Modelo para procurar o utilizador na BD
-        utilizador = UserModel.buscar_por_nome(nome_limpo)
-        
-        if not utilizador:
-            st.error("Utilizador não encontrado. Solicita o teu acesso ao Administrador.")
-            return False
-            
-        # 2. Aplicar a Regra de Segurança: Verificar o Estado de Acesso
-        estado = utilizador.get('estado')
+        # 2. Obter Utilizadores Pendentes
+        pendentes = AdminController.listar_pendentes()
 
-        if estado == 'Pendente':
-            st.warning("⏳ O teu acesso ainda aguarda aprovação do Administrador.")
-            return False
+        if not pendentes:
+            st.info("🎉 Não existem utilizadores aguardando aprovação no momento.")
+            return
 
-        if estado == 'Rejeitado':
-            st.error("❌ O teu acesso foi recusado pela administração.")
-            return False
+        st.warning(f"Existem **{len(pendentes)}** pedidos de adesão pendentes.")
 
-        if estado != 'Aprovado':
-            st.error("⚠️ Estado de conta inválido ou inativo.")
-            return False
+        # 3. Listagem em Formato Card com Ações
+        for p in pendentes:
+            with st.container(border=True):
+                col_info, col_acoes = st.columns([3, 2])
+                
+                with col_info:
+                    st.markdown(f"**Nome:** {p['nome']}")
+                    st.caption(f"📧 {p['email']} | 📅 Registado em: {p.get('data_registo', 'N/D')}")
+                
+                with col_acoes:
+                    col_aprovar, col_rejeitar = st.columns(2)
+                    
+                    with col_aprovar:
+                        if st.button("✅ Aprovar", key=f"app_{p['utilizador_id']}", use_container_width=True):
+                            if AdminController.processar_decisao(p['utilizador_id'], aprovado=True):
+                                st.toast(f"Utilizador {p['nome']} aprovado!", icon="✅")
+                                st.rerun()
+                            else:
+                                st.error("Erro ao aprovar utilizador.")
 
-        # 3. Sessão autorizada
-        st.session_state['utilizador_logado'] = utilizador
-        st.success(f"Bem-vindo de volta, {utilizador['nome']}!")
-        return True   
+                    with col_rejeitar:
+                        if st.button("❌ Rejeitar", key=f"rej_{p['utilizador_id']}", use_container_width=True):
+                            if AdminController.processar_decisao(p['utilizador_id'], aprovado=False):
+                                st.toast(f"Pedido de {p['nome']} rejeitado.", icon="ℹ️")
+                                st.rerun()
+                            else:
+                                st.error("Erro ao rejeitar utilizador.")
