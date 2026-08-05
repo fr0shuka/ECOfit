@@ -69,5 +69,5 @@ class AdminController:
 
     @staticmethod
     def processar_decisao(utilizador_id: int, aprovado: bool) -> bool:
-        novo_estado = "Aprovado" if aprovado else "Recusado"
+        novo_estado = "Aprovado" if aprovado else "Rejeitado"
         return UserModel.atualizar_estado_utilizador(utilizador_id, novo_estado)
