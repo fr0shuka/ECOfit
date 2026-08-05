@@ -88,5 +88,5 @@ class UserModel:
             ).eq("utilizador_id", utilizador_id).execute()
             return True
         except Exception as e:
-            print(f"Erro ao atualizar estado: {e}")
+            print(f"❌ ERRO SUPABASE AO ATUALIZAR ESTADO: {e}")
             return False
