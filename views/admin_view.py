@@ -1,4 +1,6 @@
 import streamlit as st
+from models.user_model import UserModel
+from controllers.admin_controller import AdminController
 
 class AdminView:
     @staticmethod
