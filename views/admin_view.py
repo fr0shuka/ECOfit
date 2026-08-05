@@ -11,7 +11,7 @@ class AdminView:
     def renderizar_painel_admin():
         # 1. Controlo de Acesso (Apenas Admins)
         utilizador = st.session_state.get('utilizador_logado')
-        if not utilizador or utilizador.get('tipo_utilizador') != 'Admin':
+        if not utilizador or utilizador.get('perfil') != 'Admin':
             st.error("⛔ Acesso restrito a administradores.")
             return
 
