@@ -61,3 +61,13 @@ class AdminController:
             st.rerun()
         else:
             st.error("Erro ao rejeitar o pedido.")
+
+
+    @staticmethod
+    def listar_pendentes():
+        return UserModel.obter_utilizadores_por_estado("Pendente")
+
+    @staticmethod
+    def processar_decisao(utilizador_id: int, aprovado: bool) -> bool:
+        novo_estado = "Aprovado" if aprovado else "Rejeitado"
+        return UserModel.atualizar_estado_utilizador(utilizador_id, novo_estado)
