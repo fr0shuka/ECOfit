@@ -1,6 +1,7 @@
 import sys
 import os
 import streamlit as st
+import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from controllers.admin_controller import AdminController
@@ -43,6 +44,7 @@ class AdminView:
                         if st.button("✅ Aprovar", key=f"app_{p['utilizador_id']}", use_container_width=True):
                             if AdminController.processar_decisao(p['utilizador_id'], aprovado=True):
                                 st.toast(f"Utilizador {p['nome']} aprovado!", icon="✅")
+                                time.sleep(1.5)
                                 st.rerun()
                             else:
                                 st.error("Erro ao aprovar utilizador.")
@@ -51,6 +53,7 @@ class AdminView:
                         if st.button("❌ Rejeitar", key=f"rej_{p['utilizador_id']}", use_container_width=True):
                             if AdminController.processar_decisao(p['utilizador_id'], aprovado=False):
                                 st.toast(f"Pedido de {p['nome']} rejeitado.", icon="ℹ️")
+                                time.sleep(1.5)
                                 st.rerun()
                             else:
                                 st.error("Erro ao rejeitar utilizador.")

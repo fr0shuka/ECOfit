@@ -1,3 +1,4 @@
+import time
 import streamlit as st
 from controllers.file_controller import FileController
 
@@ -20,6 +21,9 @@ class UploadView:
             
             if st.button("Processar e Sincronizar Atividade", use_container_width=True, key="btn_upload_fit"):
                 with st.spinner("A analisar métricas do ficheiro..."):
+                    time.sleep(1.5)
                     sucesso = FileController.processar_ficheiro_treino(ficheiro)
                     if sucesso:
                         st.success("🎯 Sincronização concluída! Os teus pontos foram atualizados no ranking.")
+                        time.sleep(1.5)
+                        st.rerun()

@@ -1,4 +1,5 @@
 import pandas as pd
+import time
 import xml.etree.ElementTree as ET
 import streamlit as st
 from datetime import date
@@ -27,6 +28,7 @@ class FileController:
                     minutos = int(total_tempo / 60) if total_tempo > 500 else int(total_tempo)
                 else:
                     st.error("❌ CSV inválido. Não encontrámos colunas de 'distância' ou 'tempo'.")
+                    time.sleep(1.5)
                     return False
 
             # --- CASO 2: Atividade Individual em GPX ---
@@ -73,6 +75,7 @@ class FileController:
                     data_atividade = primeiro_tempo.strftime('%Y-%m-%d')
                 else:
                     st.error("❌ O ficheiro GPX não contém marcas temporais válidas.")
+                    time.sleep(1.5)
                     return False
 
 
@@ -107,6 +110,7 @@ class FileController:
                         km = round((len(trackpoints) * 0.005), 2)
                     else:
                         st.error("❌ Ficheiro TCX sem dados de telemetria legíveis.")
+                        time.sleep(1.5)
                         return False
 
             # Gravação final se houver dados extraídos com sucesso
