@@ -1,5 +1,10 @@
+import sys
+import os
 import re
 import streamlit as st
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from controllers.auth_controller import AuthController
 from controllers.admin_controller import AdminController
 
