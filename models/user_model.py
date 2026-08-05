@@ -66,11 +66,11 @@ class UserModel:
 
     @staticmethod
     def obter_utilizadores_por_estado(estado: str = "Pendente"):
-        """Retorna a lista de utilizadores filtrados pelo estado de aprovação."""
+        """Retorna os utilizadores da bd_utilizadores filtrados pelo estado."""
         try:
             supabase = get_supabase_client()
-            resposta = supabase.table("utilizadores").select(
-                "utilizador_id, nome, email, data_registo, estado, tipo_utilizador"
+            resposta = supabase.table("bd_utilizadores").select(
+                "utilizador_id, nome, estado, perfil"
             ).eq("estado", estado).execute()
             return resposta.data or []
         except Exception as e:
@@ -80,10 +80,10 @@ class UserModel:
     
     @staticmethod
     def atualizar_estado_utilizador(utilizador_id: int, novo_estado: str) -> bool:
-        """Atualiza o estado do utilizador para 'Aprovado' ou 'Rejeitado'."""
+        """Atualiza o estado na tabela bd_utilizadores."""
         try:
             supabase = get_supabase_client()
-            supabase.table("utilizadores").update(
+            supabase.table("bd_utilizadores").update(
                 {"estado": novo_estado}
             ).eq("utilizador_id", utilizador_id).execute()
             return True

@@ -27,14 +27,14 @@ class AdminView:
 
         st.warning(f"Existem **{len(pendentes)}** pedidos de adesão pendentes.")
 
-        # 3. Listagem em Formato Card com Ações
+        # 3. Listagem ajustada dos utilizadores pendentes com botões de ação
         for p in pendentes:
             with st.container(border=True):
                 col_info, col_acoes = st.columns([3, 2])
                 
                 with col_info:
                     st.markdown(f"**Nome:** {p['nome']}")
-                    st.caption(f"📧 {p['email']} | 📅 Registado em: {p.get('data_registo', 'N/D')}")
+                    st.caption(f"👤 **Perfil:** {p.get('perfil', 'Utilizador')} | ⏳ **Estado:** {p.get('estado', 'Pendente')}")
                 
                 with col_acoes:
                     col_aprovar, col_rejeitar = st.columns(2)
