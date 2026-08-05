@@ -2,6 +2,7 @@ import sys
 import os
 import re
 import streamlit as st
+import time
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -84,3 +85,4 @@ class LoginView:
                     st.rerun()
                 else:
                     st.error("❌ Não é possível submeter. Resolva os avisos no nome antes de avançar.")
+                    time.sleep(1.5)

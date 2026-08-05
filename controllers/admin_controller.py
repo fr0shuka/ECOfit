@@ -1,4 +1,5 @@
 import re
+import time
 import streamlit as st
 from models.user_model import UserModel
 
@@ -39,9 +40,11 @@ class AdminController:
         sucesso = UserModel.criar_utilizador_pendente(nome)
         if sucesso:
             st.success("🎉 Pedido submetido! Aguarde a aprovação do Administrador.")
+            time.sleep(1.5)
             return True
         else:
             st.error("Erro ao submeter o pedido. Tente novamente.")
+            time.sleep(1.5)
             return False
 
     @staticmethod
@@ -49,18 +52,22 @@ class AdminController:
         """Aprova o acesso de um atleta pendente."""
         if UserModel.atualizar_estado(utilizador_id, 'Aprovado'):
             st.success("Atleta aprovado com sucesso!")
+            time.sleep(1.5)
             st.rerun()
         else:
             st.error("Erro ao aprovar o atleta.")
+            time.sleep(1.5)
 
     @staticmethod
     def rejeitar_atleta(utilizador_id: int):
         """Rejeita (elimina) o pedido de acesso."""
         if UserModel.eliminar_utilizador(utilizador_id):
             st.warning("Pedido de acesso rejeitado e removido.")
+            time.sleep(1.5)
             st.rerun()
         else:
             st.error("Erro ao rejeitar o pedido.")
+            time.sleep(1.5)
 
 
     @staticmethod

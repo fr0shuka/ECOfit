@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 import streamlit as st
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -27,19 +28,23 @@ class AuthController:
 
         if estado == 'Pendente':
             st.warning("⏳ O teu acesso ainda aguarda aprovação do Administrador.")
+            time.sleep(1.5)
             return False
 
         if estado == 'Rejeitado':
             st.error("❌ O teu acesso foi recusado pela administração.")
+            time.sleep(1.5)
             return False
 
         if estado != 'Aprovado':
             st.error("⚠️ Estado de conta inválido ou inativo.")
+            time.sleep(1.5)
             return False
 
         # 3. Sessão autorizada
         st.session_state['utilizador_logado'] = utilizador
         st.success(f"Bem-vindo de volta, {utilizador['nome']}!")
+        time.sleep(1.5)
         return True
 
     @staticmethod
