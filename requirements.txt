@@ -5,3 +5,4 @@ plotly
 pytcx
 gpxpy
 geopy
+streamlit-js-eval

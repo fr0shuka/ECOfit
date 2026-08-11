@@ -4,6 +4,7 @@ from views.dashboard_view import DashboardView
 from views.admin_view import AdminView
 from views.upload_view import UploadView
 from views.users_view import UsersView
+from views.components import renderizar_meteo_sidebar
 
 # Configuração centrada e aplicação do Logotipo no separador do navegador
 st.set_page_config(
@@ -23,11 +24,17 @@ else:
         st.markdown(f"### Olá, **{utilizador['nome']}**")
         st.caption(f"Perfil: {utilizador['perfil']} | Estado: {utilizador['estado']}")
         st.markdown("---")
-        
+
+        # Renderiza o widget do tempo no fundo do menu esquerdo
+        renderizar_meteo_sidebar()
+
+
         if st.button("Terminar Sessão (Logout)", use_container_width=True):
             from controllers.auth_controller import AuthController
             AuthController.logout()
             st.rerun()
+
+
 
     st.title("💪 Painel de Performance EcoFit")
     
