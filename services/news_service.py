@@ -9,27 +9,30 @@ class GoogleNewsService:
     def obter_eventos_desporto_pt(cls, modalidade: str = None, limite: int = 5) -> list[dict]:
         """Obtém as últimas notícias de eventos desportivos em Portugal via Google News RSS."""
         
-        # Constrói a pesquisa com base no desporto geral ou modalidade específica
+        # Query simplificada e eficaz para o Google News
         if modalidade:
-            termos = f'"{modalidade}" eventos OR campeonato OR liga Portugal'
+            termos = f"{modalidade} desporto portugal"
         else:
-            termos = 'desporto eventos OR "calendário desportivo" OR "liga portugal"'
+            termos = "eventos desporto portugal"
 
         query_encoded = urllib.parse.quote(termos)
         
-        # URL parametrizado para o contexto de Portugal (hl=pt-PT, gl=PT, ceid=PT:pt-150)
-        url = f"{cls.BASE_URL}?q={query_encoded}&hl=pt-PT&gl=PT&ceid=PT:pt-150"
+        # URL com ordenação por data recente (when:7d força os últimos 7 dias)
+        url = f"{cls.BASE_URL}?q={query_encoded}+when:7d&hl=pt-PT&gl=PT&ceid=PT:pt-150"
 
         try:
             feed = feedparser.parse(url)
             noticias = []
 
             for entry in feed.entries[:limite]:
+                # Extrai a fonte original se disponível
+                fonte_nome = entry.source.title if hasattr(entry, "source") and hasattr(entry.source, "title") else "Google News"
+                
                 noticias.append({
                     "titulo": entry.title,
                     "link": entry.link,
                     "publicado": getattr(entry, "published", "N/D"),
-                    "fonte": entry.source.title if hasattr(entry, "source") else "Google News"
+                    "fonte": fonte_nome
                 })
             return noticias
         except Exception as e:
@@ -37,16 +40,10 @@ class GoogleNewsService:
             return []
 
 
-# Exemplo de teste/chamada direta no próprio ficheiro:
+# Teste rápido de verificação
 if __name__ == "__main__":
-    # Teste 1: Geral
-    print("--- Notícias Gerais de Desporto ---")
-    lista = GoogleNewsService.obter_eventos_desporto_pt(limite=3)
-    for n in lista:
-        print(f"[{n['fonte']}] {n['titulo']}\nLink: {n['link']}\n")
-
-    # Teste 2: Modalidade Específica (ex: Ciclismo)
-    print("--- Notícias de Ciclismo ---")
-    lista_ciclismo = GoogleNewsService.obter_eventos_desporto_pt(modalidade="ciclismo", limite=2)
-    for n in lista_ciclismo:
-        print(f"[{n['fonte']}] {n['titulo']}\nLink: {n['link']}\n")
+    noticias = GoogleNewsService.obter_eventos_desporto_pt(limite=5)
+    print(f"Total encontradas: {len(noticias)}\n")
+    for n in noticias:
+        print(f"• [{n['fonte']}] {n['titulo']}")
+        print(f"  {n['link']}\n")
