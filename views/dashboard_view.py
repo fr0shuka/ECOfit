@@ -84,15 +84,22 @@ class DashboardView:
         df['km_corridos'] = pd.to_numeric(df['km_corridos'], errors='coerce').fillna(0)
         df['minutos_treino'] = pd.to_numeric(df['minutos_treino'], errors='coerce').fillna(0)
         df['copos_agua'] = pd.to_numeric(df['copos_agua'], errors='coerce').fillna(0)
+        df['pecas_fruta'] = pd.to_numeric(df.get('pecas_fruta', 0), errors='coerce').fillna(0)
         df['pontos_ganhos'] = pd.to_numeric(df['pontos_ganhos'], errors='coerce').fillna(0)
         df = df.sort_values(by='data_registo', ascending=True)
 
         # 2. Exibição dos Cartões KPI
+        # 🟢 Linha 1: As 4 métricas de atividades/hábitos
         col1, col2, col3, col4 = st.columns(4)
         col1.metric("🏃 Distância", f"{df['km_corridos'].sum():.1f} km")
         col2.metric("⏱️ Tempo Total", f"{int(df['minutos_treino'].sum())} min")
         col3.metric("💧 Hidratação", f"{int(df['copos_agua'].sum())} copos")
-        col4.metric("🌱 Pontos", f"{int(df['pontos_ganhos'].sum())} pts")
+        col4.metric("🍎 Fruta", f"{int(df['pecas_fruta'].sum())} peças")
+
+        # 🟢 Linha 2: Pontos Acumulados centrados
+        st.markdown("<br>", unsafe_allow_html=True)
+        _, col_centro, _ = st.columns([1.5, 1, 1.5])
+        col_centro.metric("🌱 Pontos Acumulados", f"{int(df['pontos_ganhos'].sum())} pts")
 
         st.markdown("<br>", unsafe_allow_html=True)
 
