@@ -93,20 +93,24 @@ class UserModel:
 
 
     @staticmethod
-    def obter_todos_aprovados() -> list:
-        """Procura na base de dados todos os utilizadores com estado 'Aprovado'."""
+    def obter_utilizadores_e_atividades():
+        """Retorna a lista de utilizadores aprovados e todos os registos de atividades."""
         try:
             supabase = get_supabase_client()
-            resposta = (
-                supabase.table("bd_utilizadores")
-                .select("*")
-                .eq("estado", "Aprovado")
-                .execute()
-            )
             
-            # O SDK do Supabase devolve os dados em formato de lista de dicionários dentro de .data
-            return resposta.data if resposta.data else []
+            # 1. Procurar utilizadores aprovados
+            res_users = supabase.table("bd_utilizadores") \
+                .select("utilizador_id, nome") \
+                .eq("estado", "Aprovado") \
+                .execute()
+                
+            # 2. Procurar todas as atividades registadas
+            res_atividades = supabase.table("bd_atividades") \
+                .select("utilizador_id, pontos, kms, agua, fruta") \
+                .execute()
+                
+            return res_users.data or [], res_atividades.data or []
             
         except Exception as e:
-            print(f"❌ Erro Supabase ao obter utilizadores aprovados: {e}")
-            return []
+            print(f"❌ Erro ao procurar dados para o ranking: {e}")
+            return [], []
