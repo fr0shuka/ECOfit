@@ -58,7 +58,7 @@ class DashboardView:
                         "pecas_fruta": fruta,
                         "pontos_ganhos": pontos,
                         "tipo_insercao": "Manual",
-                        "temperatura": float(temp_registo),
+                        "temperatura": float(temp_real),
                         "condicao_clima": "Manual"
                     }
                     
