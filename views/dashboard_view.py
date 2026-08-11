@@ -11,8 +11,7 @@ class DashboardView:
         """Renderiza a zona de registo de atividade e o painel analítico completo."""
 
         # Regista a temperatura atual para pré-preencher o formulário
-        meteo = WeatherService.obter_meteo() if hasattr(WeatherService, "obter_meteo") else None
-        temp_sugerida = meteo.get("temp", 20.0) if isinstance(meteo, dict) else 20.0
+        temp_real = WeatherService.obter_temperatura_atual()
         
         # --- ZONA 1: FORMULÁRIO DE REGISTO MANUAL ---
         st.markdown("### 🚀 Registar Atividade")
@@ -35,12 +34,12 @@ class DashboardView:
                 copos = st.number_input("Copos de Água", min_value=0, step=1)
                 fruta = st.number_input("Peças de Fruta", min_value=0, step=1)
 
-                    # 🌡️ Campo de Temperatura no formulário
+                # Campo de Temperatura no formulário
                 temp_registo = st.number_input(
                     "Temperatura (°C)",
-                    value=float(temp_sugerida),
+                    value=temp_real,
                     step=0.5,
-                    format="%.1f",
+                    format="%.1f"
                 )
             
             submetido = st.form_submit_button("Salvar Atividade", use_container_width=True)
@@ -66,7 +65,7 @@ class DashboardView:
                         "pecas_fruta": fruta,
                         "pontos_ganhos": pontos,
                         "tipo_insercao": "Manual",
-                        "temperatura": temp_registo,
+                        "temperatura": float(temp_registo),
                         "condicao_clima": "Manual"
                     }
                     

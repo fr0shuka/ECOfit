@@ -131,8 +131,7 @@ class FileController:
         pontos = int((km * 10) + (minutos * 1))
 
         # 🌡️ Procura a temperatura atual em tempo real para a gravação automática
-        meteo = WeatherService.obter_meteo() if hasattr(WeatherService, "obter_meteo") else None
-        temp_atual = meteo.get("temp", 20.0) if isinstance(meteo, dict) else 20.0
+        temp_atual = WeatherService.obter_temperatura_atual()
 
         payload = {
             "utilizador_id": id_utilizador,
