@@ -144,3 +144,26 @@ class FileController:
         }
 
         return ActivityModel.salvar_atividade(payload)
+
+    @staticmethod
+    def obter_historico_atividades_ficheiro(utilizador_id: int) -> pd.DataFrame:
+        """Obtém as atividades carregadas e organiza-as para a vista."""
+        registos = ActivityModel.obter_ficheiros_carregados(utilizador_id)
+        
+        if not registos:
+            return pd.DataFrame()
+            
+        df = pd.DataFrame(registos)
+        
+        # Filtra apenas os registos inseridos via ficheiro, se usares essa diferenciação
+        if 'tipo_insercao' in df.columns:
+            df = df[df['tipo_insercao'].str.lower() == 'ficheiro']
+
+        if df.empty:
+            return pd.DataFrame()
+
+        # Formata a data de registo para exibição
+        if 'data_registo' in df.columns:
+            df['data_registo'] = pd.to_datetime(df['data_registo']).dt.strftime('%d/%m/%Y')
+
+        return df

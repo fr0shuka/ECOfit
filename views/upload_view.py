@@ -1,29 +1,63 @@
 import time
 import streamlit as st
+import pandas as pd
 from controllers.file_controller import FileController
+
 
 class UploadView:
     @staticmethod
     def renderizar_zona_upload():
-        """Desenha o ecrã de importação de dados externos (Strava, Garmin, Fitbit)."""
-        st.markdown("### 📥 Sincronização Externa (Módulos Wearables)")
-        st.caption("Carrega as tuas atividades diretamente a partir dos ficheiros exportados pelas tuas plataformas de treino.")
+        st.subheader("📥 Sincronizar Ficheiro de Atividades")
         
-        # Componente oficial do Streamlit para captura de ficheiros
+        utilizador = st.session_state.get('utilizador_logado')
+        if not utilizador:
+            return
+
+        utilizador_id = utilizador['utilizador_id']
+
+        # --- SEÇÃO 1: UPLOAD ---
         ficheiro = st.file_uploader(
-            "Seleciona o ficheiro de treino", 
-            type=["csv", "gpx", "tcx"],
-            help="Aceita CSV para relatórios mensais, ou GPX/TCX para treinos individuais."
+            "Seleciona o ficheiro de atividades (CSV ou Excel)", 
+            type=["csv", "xlsx"]
         )
-        
+
         if ficheiro is not None:
-            st.info(f"📋 Ficheiro detetado: **{ficheiro.name}** ({round(ficheiro.size/1024, 2)} KB)")
-            
-            if st.button("Processar e Sincronizar Atividade", use_container_width=True, key="btn_upload_fit"):
-                with st.spinner("A analisar métricas do ficheiro..."):
+            if st.button("🚀 Processar Ficheiro", type="primary", use_container_width=True):
+                with st.spinner("A processar e a guardar os dados..."):
+                    sucesso = FileController.processar_ficheiro(ficheiro, utilizador_id)
+
+                if sucesso:
+                    st.toast(f"Ficheiro '{ficheiro.name}' processado com sucesso!", icon="🎉")
                     time.sleep(1.5)
-                    sucesso = FileController.processar_ficheiro_treino(ficheiro)
-                    if sucesso:
-                        st.success("🎯 Sincronização concluída! Os teus pontos foram atualizados no ranking.")
-                        time.sleep(1.5)
-                        st.rerun()
+                    st.rerun()
+                else:
+                    st.error("❌ Erro ao processar o ficheiro.")
+
+        st.markdown("---")
+
+        # --- SEÇÃO 2: TABELA DE HISTÓRICO DE DADOS SINCRONIZADOS ---
+        st.markdown("### 📋 Atividades Sincronizadas via Ficheiro")
+
+        df_historico = FileController.obter_historico_atividades_ficheiro(utilizador_id)
+
+        if df_historico.empty:
+            st.info("Ainda não existem atividades registadas via ficheiro.")
+            return
+
+        # Mapeamento para nomes amigáveis no ecrã
+        colunas_exibir = {
+            'data_registo': 'Data da Atividade',
+            'km_corridos': 'Distância (Km)',
+            'minutos_treino': 'Duração (min)',
+            'pontos_ganhos': 'Pontos Obtidos'
+        }
+
+        cols_presentes = [c for c in colunas_exibir.keys() if c in df_historico.columns]
+        df_exibicao = df_historico[cols_presentes].copy()
+        df_exibicao.rename(columns=colunas_exibir, inplace=True)
+
+        st.dataframe(
+            df_exibicao,
+            use_container_width=True,
+            hide_index=True
+        )

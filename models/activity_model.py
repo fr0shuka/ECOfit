@@ -27,3 +27,21 @@ class ActivityModel:
         except Exception as e:
             st.error(f"Erro ao procurar atividades no Supabase: {e}")
             return []
+
+    @staticmethod
+    def obter_ficheiros_carregados(utilizador_id: int) -> list:
+        """Procura os registos de atividades originados por ficheiro."""
+        try:
+            supabase = get_supabase_client()
+            
+            # Procura na bd_atividades apenas os registos onde tipo_insercao é 'ficheiro' ou 'upload'
+            resposta = supabase.table("bd_atividades") \
+                .select("data_registo, km_corridos, minutos_treino, pontos_ganhos, tipo_insercao") \
+                .eq("utilizador_id", utilizador_id) \
+                .order("data_registo", desc=True) \
+                .execute()
+                
+            return resposta.data or []
+        except Exception as e:
+            print(f"❌ Erro ao procurar histórico de atividades/ficheiros: {e}")
+            return []
