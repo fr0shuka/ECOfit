@@ -21,8 +21,8 @@ class EventosDesportoService:
                 fonte = entry.source.title if hasattr(entry, "source") and hasattr(entry.source, "title") else "Evento"
                 
                 titulo_limpo = entry.title.split(" - ")[0]
-                if len(titulo_limpo) > 45:
-                    titulo_limpo = titulo_limpo[:42] + "..."
+                if len(titulo_limpo) > 40:
+                    titulo_limpo = titulo_limpo[:37] + "..."
 
                 resultados.append({
                     "titulo": titulo_limpo,
@@ -36,22 +36,21 @@ class EventosDesportoService:
 
 
 def renderizar_galeria_eventos(termo_pesquisa: str):
-    """Módulo visual para desenhar a galeria com setas de navegação no Streamlit."""
+    """Renderiza a galeria de notícias fixada no rodapé da página."""
     eventos = EventosDesportoService.pesquisar_eventos(termo_pesquisa, limite=6)
 
     if not eventos:
-        st.info("Nenhum evento encontrado de momento.")
         return
 
-    # Gera os cartões
+    # Gera os cartões em formato compacto para o rodapé
     cards_html = ""
     for ev in eventos:
         cards_html += f"""
         <div style="
-            flex: 0 0 210px;
-            height: 150px;
+            flex: 0 0 190px;
+            height: 110px;
             background-color: #1e1e1e;
-            padding: 12px;
+            padding: 10px;
             border-radius: 8px;
             border: 1px solid #333;
             display: flex;
@@ -59,42 +58,56 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
             justify-content: space-between;
             box-sizing: border-box;">
             <div>
-                <span style="color: #4da6ff; font-size: 0.70em; font-weight: bold; text-transform: uppercase;">{ev['fonte']}</span>
-                <p style="color: #fff; font-size: 0.82em; font-weight: 600; line-height: 1.25; margin: 6px 0 0 0;">{ev['titulo']}</p>
+                <span style="color: #4da6ff; font-size: 0.65em; font-weight: bold; text-transform: uppercase;">{ev['fonte']}</span>
+                <p style="color: #fff; font-size: 0.78em; font-weight: 600; line-height: 1.2; margin: 4px 0 0 0;">{ev['titulo']}</p>
             </div>
             <a href="{ev['link']}" target="_blank" style="
                 color: #ff4b4b;
                 text-decoration: none;
                 font-weight: bold;
-                font-size: 0.75em;">🔗 Aceder ao Evento →</a>
+                font-size: 0.70em;">🔗 Ver Evento →</a>
         </div>
         """
 
-    # Galeria com botões laterais + CSS para esconder a scrollbar
-    galeria_html = f"""
+    # Estrutura HTML/CSS fixada na base da janela (rodapé)
+    footer_html = f"""
     <style>
-        /* Esconde a barra de scroll nos navegadores */
+        /* Cria margem no fundo do Streamlit para o conteúdo não ser tapado pelo rodapé */
+        body {{
+            margin-bottom: 160px !important;
+        }}
         .no-scrollbar::-webkit-scrollbar {{
             display: none;
         }}
         .no-scrollbar {{
-            -ms-overflow-style: none;  /* IE/Edge */
-            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }}
+        .footer-news-container {{
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100vw;
+            background-color: #121212;
+            border-top: 1px solid #333;
+            padding: 8px 16px;
+            z-index: 99999;
+            box-shadow: 0px -4px 10px rgba(0,0,0,0.5);
+            box-sizing: border-box;
         }}
         .nav-btn {{
             background-color: #2b2b2b;
             color: #fff;
             border: 1px solid #444;
             border-radius: 50%;
-            width: 32px;
-            height: 32px;
+            width: 28px;
+            height: 28px;
             cursor: pointer;
             font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
             user-select: none;
-            transition: background-color 0.2s;
         }}
         .nav-btn:hover {{
             background-color: #ff4b4b;
@@ -102,22 +115,26 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
         }}
     </style>
 
-    <div style="display: flex; align-items: center; gap: 8px;">
-        <button class="nav-btn" onclick="document.getElementById('gallery-container').scrollBy({{left: -230, behavior: 'smooth'}})">❮</button>
-        
-        <div id="gallery-container" class="no-scrollbar" style="
-            display: flex;
-            gap: 12px;
-            overflow-x: auto;
-            scroll-behavior: smooth;
-            padding: 4px 0;
-            align-items: stretch;
-            width: 100%;">
-            {cards_html}
+    <div class="footer-news-container">
+        <div style="font-size: 0.75em; color: #888; margin-bottom: 4px; font-weight: bold;">
+            🏆 Próximos Eventos Desportivos
         </div>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="nav-btn" onclick="document.getElementById('gallery-footer').scrollBy({{left: -200, behavior: 'smooth'}})">❮</button>
+            
+            <div id="gallery-footer" class="no-scrollbar" style="
+                display: flex;
+                gap: 10px;
+                overflow-x: auto;
+                scroll-behavior: smooth;
+                align-items: stretch;
+                width: 100%;">
+                {cards_html}
+            </div>
 
-        <button class="nav-btn" onclick="document.getElementById('gallery-container').scrollBy({{left: 230, behavior: 'smooth'}})">❯</button>
+            <button class="nav-btn" onclick="document.getElementById('gallery-footer').scrollBy({{left: 200, behavior: 'smooth'}})">❯</button>
+        </div>
     </div>
     """
 
-    st.components.v1.html(galeria_html, height=170, scrolling=False)
+    st.components.v1.html(footer_html, height=150, scrolling=False)
