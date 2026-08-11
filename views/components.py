@@ -31,7 +31,7 @@ def renderizar_meteo_sidebar():
 
     if meteo:
         st.sidebar.metric(
-            label=f"({meteo['local']})", 
+            label=f"{meteo['local']}", 
             value=f"{meteo['temp']} °C", 
             delta=f"Vento: {meteo['wind']} km/h"
         )
