@@ -34,14 +34,7 @@ class DashboardView:
                 copos = st.number_input("Copos de Água", min_value=0, step=1)
                 fruta = st.number_input("Peças de Fruta", min_value=0, step=1)
 
-                # Campo de Temperatura no formulário
-                temp_registo = st.number_input(
-                    "Temperatura (°C)",
-                    value=temp_real,
-                    step=0.5,
-                    format="%.1f"
-                )
-            
+               
             submetido = st.form_submit_button("Salvar Atividade", use_container_width=True)
             
             if submetido:
