@@ -61,14 +61,25 @@ else:
             UsersView.renderizar()  
 
 
-    noticias = GoogleNewsService.obter_eventos_desporto_pt(limite=5)
+    st.title("🗓️ Próximos Eventos Desportivos")
+
+    # Obter as notícias (ex: 4 cartões na horizontal)
+    noticias = GoogleNewsService.obter_proximos_eventos_desporto_pt(limite=4)
 
     if noticias:
-        for item in noticias:
-            with st.container():
-                st.subheader(item["titulo"])
-                st.caption(f"Fonte: {item['fonte']} | Data: {item['publicado']}")
-                st.markdown(f"[Ler artigo completo]({item['link']})")
-                st.divider()
-        else:
-            st.info("Nenhuma notícia encontrada de momento.")
+        # Cria N colunas lado a lado no Streamlit
+        cols = st.columns(len(noticias))
+
+        for idx, item in enumerate(noticias):
+            with cols[idx]:
+                # Utiliza st.container para criar um visual de cartão delimitado
+                with st.container(border=True):
+                    st.markdown(f"**{item['fonte']}**")
+                    st.caption(f"🕒 {item['publicado']}")
+                    
+                    # Título com altura truncada/fixa para manter o alinhamento
+                    st.write(f"### {item['titulo']}")
+                    
+                    st.markdown(f"[🔗 Ver detalhes / Agenda]({item['link']})")
+    else:
+        st.info("Nenhum próximo evento desportivo encontrado de momento.")
