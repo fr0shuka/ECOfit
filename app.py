@@ -62,3 +62,13 @@ else:
 
 
     noticias = GoogleNewsService.obter_eventos_desporto_pt(limite=5)
+
+    if noticias:
+        for item in noticias:
+            with st.container():
+                st.subheader(item["titulo"])
+                st.caption(f"Fonte: {item['fonte']} | Data: {item['publicado']}")
+                st.markdown(f"[Ler artigo completo]({item['link']})")
+                st.divider()
+        else:
+            st.info("Nenhuma notícia encontrada de momento.")
