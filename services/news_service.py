@@ -117,7 +117,7 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
 
     <div class="footer-news-container">
         <div style="font-size: 0.75em; color: #888; margin-bottom: 4px; font-weight: bold;">
-            🏆 Próximos Eventos Desportivos
+             Próximos Eventos Desportivos
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
             <button class="nav-btn" onclick="document.getElementById('gallery-footer').scrollBy({{left: -200, behavior: 'smooth'}})">❮</button>

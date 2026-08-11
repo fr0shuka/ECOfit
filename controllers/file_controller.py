@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 import streamlit as st
 from datetime import date
 from models.activity_model import ActivityModel
-
+from services.weather_service import WeatherService
 
 class FileController:
     @staticmethod
@@ -130,6 +130,10 @@ class FileController:
         id_utilizador = st.session_state['utilizador_logado']['utilizador_id']
         pontos = int((km * 10) + (minutos * 1))
 
+        # 🌡️ Procura a temperatura atual em tempo real para a gravação automática
+        meteo = WeatherService.obter_meteo() if hasattr(WeatherService, "obter_meteo") else None
+        temp_atual = meteo.get("temp", 20.0) if isinstance(meteo, dict) else 20.0
+
         payload = {
             "utilizador_id": id_utilizador,
             "data_registo": data_real if data_real else str(date.today()),
@@ -139,7 +143,7 @@ class FileController:
             "pecas_fruta": 0,
             "pontos_ganhos": pontos,
             "tipo_insercao": "Ficheiro",
-            "temperatura": 20.0,
+            "temperatura": temp_atual,
             "condicao_clima": "Sincronizado"
         }
 
