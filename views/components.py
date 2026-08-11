@@ -10,7 +10,7 @@ except ImportError:
 
 def renderizar_meteo_sidebar():
     """Renderiza o widget do tempo no fundo do menu lateral."""
-    st.sidebar.markdown("---")
+    
     st.sidebar.markdown("### 🌡️ Meteorologia")
 
     loc = None
@@ -31,7 +31,7 @@ def renderizar_meteo_sidebar():
 
     if meteo:
         st.sidebar.metric(
-            label=f"Clima ({meteo['local']})", 
+            label=f"({meteo['local']})", 
             value=f"{meteo['temp']} °C", 
             delta=f"Vento: {meteo['wind']} km/h"
         )
