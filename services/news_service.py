@@ -35,49 +35,89 @@ class EventosDesportoService:
             return []
 
 
-def renderizar_galeria_eventos(termo_pesquisa: str):
-    """Módulo visual para desenhar a galeria no Streamlit."""
-    eventos = EventosDesportoService.pesquisar_eventos(termo_pesquisa, limite=6)
+    def renderizar_galeria_eventos(termo_pesquisa: str):
+        """Módulo visual para desenhar a galeria com setas de navegação no Streamlit."""
+        eventos = EventosDesportoService.pesquisar_eventos(termo_pesquisa, limite=6)
 
-    if not eventos:
-        st.info("Nenhum evento encontrado de momento.")
-        return
+        if not eventos:
+            st.info("Nenhum evento encontrado de momento.")
+            return
 
-    cards_html = ""
-    for ev in eventos:
-        cards_html += f"""
-        <div style="
-            flex: 0 0 210px;
-            height: 150px;
-            background-color: #1e1e1e;
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            box-sizing: border-box;">
-            <div>
-                <span style="color: #4da6ff; font-size: 0.70em; font-weight: bold; text-transform: uppercase;">{ev['fonte']}</span>
-                <p style="color: #fff; font-size: 0.82em; font-weight: 600; line-height: 1.25; margin: 6px 0 0 0;">{ev['titulo']}</p>
+        # Gera os cartões
+        cards_html = ""
+        for ev in eventos:
+            cards_html += f"""
+            <div style="
+                flex: 0 0 210px;
+                height: 150px;
+                background-color: #1e1e1e;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid #333;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                box-sizing: border-box;">
+                <div>
+                    <span style="color: #4da6ff; font-size: 0.70em; font-weight: bold; text-transform: uppercase;">{ev['fonte']}</span>
+                    <p style="color: #fff; font-size: 0.82em; font-weight: 600; line-height: 1.25; margin: 6px 0 0 0;">{ev['titulo']}</p>
+                </div>
+                <a href="{ev['link']}" target="_blank" style="
+                    color: #ff4b4b;
+                    text-decoration: none;
+                    font-weight: bold;
+                    font-size: 0.75em;">🔗 Aceder ao Evento →</a>
             </div>
-            <a href="{ev['link']}" target="_blank" style="
-                color: #ff4b4b;
-                text-decoration: none;
+            """
+
+        # Galeria com botões laterais + CSS para esconder a scrollbar
+        galeria_html = f"""
+        <style>
+            /* Esconde a barra de scroll nos navegadores */
+            .no-scrollbar::-webkit-scrollbar {{
+                display: none;
+            }}
+            .no-scrollbar {{
+                -ms-overflow-style: none;  /* IE/Edge */
+                scrollbar-width: none;  /* Firefox */
+            }}
+            .nav-btn {{
+                background-color: #2b2b2b;
+                color: #fff;
+                border: 1px solid #444;
+                border-radius: 50%;
+                width: 32px;
+                height: 32px;
+                cursor: pointer;
                 font-weight: bold;
-                font-size: 0.75em;">🔗 Aceder ao Evento →</a>
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                user-select: none;
+                transition: background-color 0.2s;
+            }}
+            .nav-btn:hover {{
+                background-color: #ff4b4b;
+                border-color: #ff4b4b;
+            }}
+        </style>
+
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <button class="nav-btn" onclick="document.getElementById('gallery-container').scrollBy({{left: -230, behavior: 'smooth'}})">❮</button>
+            
+            <div id="gallery-container" class="no-scrollbar" style="
+                display: flex;
+                gap: 12px;
+                overflow-x: auto;
+                scroll-behavior: smooth;
+                padding: 4px 0;
+                align-items: stretch;
+                width: 100%;">
+                {cards_html}
+            </div>
+
+            <button class="nav-btn" onclick="document.getElementById('gallery-container').scrollBy({{left: 230, behavior: 'smooth'}})">❯</button>
         </div>
         """
 
-    galeria_html = f"""
-    <div style="
-        display: flex;
-        gap: 12px;
-        overflow-x: auto;
-        padding-bottom: 8px;
-        align-items: stretch;">
-        {cards_html}
-    </div>
-    """
-
-    st.components.v1.html(galeria_html, height=170, scrolling=False)
+        st.components.v1.html(galeria_html, height=170, scrolling=False)
