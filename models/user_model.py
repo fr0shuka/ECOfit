@@ -94,23 +94,29 @@ class UserModel:
 
     @staticmethod
     def obter_utilizadores_e_atividades():
-        """Retorna a lista de utilizadores aprovados e todos os registos de atividades."""
+        """Procura utilizadores aprovados e todas as atividades para o ranking."""
         try:
             supabase = get_supabase_client()
             
-            # 1. Procurar utilizadores aprovados
+            # 1. Procurar todos os utilizadores (seleciona * e faz ilike para ignorar maiúsculas/minúsculas)
             res_users = supabase.table("bd_utilizadores") \
-                .select("utilizador_id, nome") \
-                .eq("estado", "Aprovado") \
+                .select("*") \
+                .ilike("estado", "aprovado") \
                 .execute()
                 
-            # 2. Procurar todas as atividades registadas
+            users = res_users.data or []
+            print(f"🔍 DEBUG RANKING - Utilizadores Aprovados Encontrados: {len(users)}")
+
+            # 2. Procurar registos da tabela de atividades
             res_atividades = supabase.table("bd_atividades") \
-                .select("utilizador_id, pontos, kms, agua, fruta") \
+                .select("*") \
                 .execute()
                 
-            return res_users.data or [], res_atividades.data or []
-            
+            atividades = res_atividades.data or []
+            print(f"🔍 DEBUG RANKING - Atividades Encontradas: {len(atividades)}")
+
+            return users, atividades
+
         except Exception as e:
-            print(f"❌ Erro ao procurar dados para o ranking: {e}")
+            print(f"❌ ERRO SUPABASE AO OBTER DADOS DO RANKING: {e}")
             return [], []
