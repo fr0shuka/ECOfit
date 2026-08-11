@@ -5,7 +5,7 @@ from views.admin_view import AdminView
 from views.upload_view import UploadView
 from views.users_view import UsersView
 from views.components import renderizar_meteo_sidebar
-from services.news_service import GoogleNewsService
+from services.news_service import renderizar_galeria_eventos
 
 # Configuração centrada e aplicação do Logotipo no separador do navegador
 st.set_page_config(
@@ -61,25 +61,10 @@ else:
             UsersView.renderizar()  
 
 
-    st.title("🗓️ Próximos Eventos Desportivos")
+    st.title("EcoFit - Eventos Desportivos")
 
-    # Obter as notícias (ex: 4 cartões na horizontal)
-    noticias = GoogleNewsService.obter_proximos_eventos_desporto_pt(limite=4)
+    # Caixa de pesquisa ou termo por defeito
+    termo = st.text_input("Pesquisar Eventos:", "proximos eventos desportivos em Portugal")
 
-    if noticias:
-        # Cria N colunas lado a lado no Streamlit
-        cols = st.columns(len(noticias))
-
-        for idx, item in enumerate(noticias):
-            with cols[idx]:
-                # Utiliza st.container para criar um visual de cartão delimitado
-                with st.container(border=True):
-                    st.markdown(f"**{item['fonte']}**")
-                    st.caption(f"🕒 {item['publicado']}")
-                    
-                    # Título com altura truncada/fixa para manter o alinhamento
-                    st.write(f"### {item['titulo']}")
-                    
-                    st.markdown(f"[🔗 Ver detalhes / Agenda]({item['link']})")
-    else:
-        st.info("Nenhum próximo evento desportivo encontrado de momento.")
+    if termo:
+        renderizar_galeria_eventos(termo)

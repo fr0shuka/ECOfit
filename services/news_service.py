@@ -3,14 +3,11 @@ import feedparser
 import streamlit as st
 
 
-class GoogleNewsService:
+class EventosDesportoService:
     BASE_URL = "https://news.google.com/rss/search"
 
     @classmethod
     def pesquisar_eventos(cls, termo_pesquisa: str, limite: int = 6) -> list[dict]:
-        """Transforma a pesquisa do utilizador numa procura direcionada a sites/agendas de eventos."""
-        
-        # Otimiza a query adicionando termos que apontam para o evento em si
         query_otimizada = f"{termo_pesquisa} (inscricoes OR programa OR 'site oficial' OR agenda)"
         query_encoded = urllib.parse.quote(query_otimizada)
         
@@ -23,10 +20,7 @@ class GoogleNewsService:
             for entry in feed.entries[:limite]:
                 fonte = entry.source.title if hasattr(entry, "source") and hasattr(entry.source, "title") else "Evento"
                 
-                # Tratamento do Título: Remove o "- Nome do Jornal/Site" que o Google junta no fim
                 titulo_limpo = entry.title.split(" - ")[0]
-                
-                # Trunca títulos longos para manter o cartão pequeno e limpo
                 if len(titulo_limpo) > 45:
                     titulo_limpo = titulo_limpo[:42] + "..."
 
@@ -42,16 +36,13 @@ class GoogleNewsService:
 
 
 def renderizar_galeria_eventos(termo_pesquisa: str):
-    """Executa a pesquisa e desenha os cartões padronizados na horizontal."""
-    
-    # 1. Faz a pesquisa dinâmica
+    """Módulo visual para desenhar a galeria no Streamlit."""
     eventos = EventosDesportoService.pesquisar_eventos(termo_pesquisa, limite=6)
 
     if not eventos:
-        st.info("Nenhum evento ou página relevante encontrada para essa pesquisa.")
+        st.info("Nenhum evento encontrado de momento.")
         return
 
-    # 2. Gera os cartões com altura e largura estritamente FIXAS
     cards_html = ""
     for ev in eventos:
         cards_html += f"""
@@ -78,7 +69,6 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
         </div>
         """
 
-    # 3. Contentor Flexbox com Scroll Horizontal
     galeria_html = f"""
     <div style="
         display: flex;
@@ -91,14 +81,3 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
     """
 
     st.components.v1.html(galeria_html, height=170, scrolling=False)
-
-
-# ==========================================
-# Exemplo de Utilização no Streamlit
-# ==========================================
-
-# Caixa de pesquisa dinâmica para o utilizador
-termo = st.text_input("O que procuras?", "proximos eventos desportivos em Portugal")
-
-if termo:
-    renderizar_galeria_eventos(termo)
