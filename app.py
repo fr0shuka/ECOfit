@@ -5,6 +5,7 @@ from views.admin_view import AdminView
 from views.upload_view import UploadView
 from views.users_view import UsersView
 from views.components import renderizar_meteo_sidebar
+from services.news_service import GoogleNewsService
 
 # Configuração centrada e aplicação do Logotipo no separador do navegador
 st.set_page_config(
@@ -58,3 +59,6 @@ else:
             UploadView.renderizar_zona_upload()
         with aba_user:
             UsersView.renderizar()  
+
+
+    noticias = GoogleNewsService.obter_eventos_desporto_pt(limite=5)

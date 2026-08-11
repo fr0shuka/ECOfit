@@ -6,3 +6,4 @@ pytcx
 gpxpy
 geopy
 streamlit-js-eval
+feedparser
