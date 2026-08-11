@@ -32,7 +32,7 @@ class UsersView:
         tab_pontos, tab_kms, tab_saude = st.tabs([
             "🥇 Top 5 Pontos",
             "🏃 Top 5 Distância (Kms)",
-            "🍎💧 Top 5 Água & Fruta"
+            "💧🍎 Top 5 Água & Fruta"
         ])
 
         with tab_pontos:
