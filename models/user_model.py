@@ -90,3 +90,23 @@ class UserModel:
         except Exception as e:
             print(f"❌ ERRO SUPABASE AO ATUALIZAR ESTADO: {e}")
             return False
+
+
+    @staticmethod
+    def obter_todos_aprovados() -> list:
+        """Procura na base de dados todos os utilizadores com estado 'Aprovado'."""
+        try:
+            supabase = get_supabase_client()
+            resposta = (
+                supabase.table("bd_utilizadores")
+                .select("*")
+                .eq("estado", "Aprovado")
+                .execute()
+            )
+            
+            # O SDK do Supabase devolve os dados em formato de lista de dicionários dentro de .data
+            return resposta.data if resposta.data else []
+            
+        except Exception as e:
+            print(f"❌ Erro Supabase ao obter utilizadores aprovados: {e}")
+            return []
