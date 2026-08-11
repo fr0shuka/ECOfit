@@ -3,7 +3,7 @@ import feedparser
 import streamlit as st
 
 
-class EventosDesportoService:
+class GoogleNewsService:
     BASE_URL = "https://news.google.com/rss/search"
 
     @classmethod
