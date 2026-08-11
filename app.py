@@ -3,6 +3,7 @@ from views.login_view import LoginView
 from views.dashboard_view import DashboardView
 from views.admin_view import AdminView
 from views.upload_view import UploadView
+from views.users_view import UsersView
 
 # Configuração centrada e aplicação do Logotipo no separador do navegador
 st.set_page_config(
@@ -31,18 +32,22 @@ else:
     st.title("💪 Painel de Performance EcoFit")
     
     if utilizador['perfil'] == 'Admin':
-        # Admin vê 3 abas agora
-        aba_app, aba_upload, aba_admin = st.tabs(["🚀 Inserir Atividade", "📥 Sincronizar Ficheiro", "🛡️ Gerir Pedidos Pendentes"])
+        # Admin vê 4 abas agora
+        aba_app, aba_upload, aba_user, aba_admin = st.tabs(["🚀 Inserir Atividade", "📥 Sincronizar Ficheiro", "🏆 Ranking & Utilizadores", "🛡️ Gerir Pedidos Pendentes"])
         with aba_app:
             DashboardView.renderizar_formulario()
         with aba_upload:
             UploadView.renderizar_zona_upload()
+        with aba_user:
+            UsersView.renderizar()
         with aba_admin:
             AdminView.renderizar_painel_admin()
     else:
-        # Atleta normal vê 2 abas
-        aba_app, aba_upload = st.tabs(["🚀 Inserir Atividade", "📥 Sincronizar Ficheiro"])
+        # Atleta normal vê 3 abas
+        aba_app, aba_upload, aba_user = st.tabs(["🚀 Inserir Atividade", "📥 Sincronizar Ficheiro", "🏆 Ranking & Utilizadores"])
         with aba_app:
             DashboardView.renderizar_formulario()
         with aba_upload:
             UploadView.renderizar_zona_upload()
+        with aba_user:
+            UsersView.renderizar()  
