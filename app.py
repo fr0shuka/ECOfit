@@ -4,14 +4,15 @@ from views.dashboard_view import DashboardView
 from views.admin_view import AdminView
 from views.upload_view import UploadView
 from views.users_view import UsersView
+from views.admin_analytics_view import AdminAnalyticsView
 from views.components import renderizar_meteo_sidebar
 from services.news_service import renderizar_galeria_eventos
 
-# Configuração centrada e aplicação do Logotipo no separador do navegador
+# Configuração da página
 st.set_page_config(
     page_title="EcoFIT", 
     page_icon="🌱", 
-    layout="centered"             # Força o layout a ficar centrado e compacto
+    layout="centered"
 )
 
 # Fluxo de navegação baseado no estado da sessão
@@ -26,33 +27,47 @@ else:
         st.caption(f"Perfil: {utilizador['perfil']} | Estado: {utilizador['estado']}")
         st.markdown("---")
 
-        # Renderiza o widget do tempo no fundo do menu esquerdo
+        # Widget meteorológico
         renderizar_meteo_sidebar()
-
 
         if st.button("Terminar Sessão (Logout)", use_container_width=True):
             from controllers.auth_controller import AuthController
             AuthController.logout()
             st.rerun()
 
-
-
-    st.title("💪 Painel de Performance EcoFit")
+    # Cabeçalho Principal
+    st.title("Painel de Performance EcoFit")
     
+    # Navegação por Perfil
     if utilizador['perfil'] == 'Admin':
-        # Admin vê 4 abas agora
-        aba_app, aba_upload, aba_user, aba_admin = st.tabs(["🚀 Inserir Atividade", "📥 Sincronizar Ficheiro", "🏆 Ranking & Utilizadores", "🛡️ Gerir Pedidos Pendentes"])
+        # Admin visualiza 5 abas (incluindo a Analítica Global)
+        aba_app, aba_upload, aba_user, aba_analytics, aba_admin = st.tabs([
+            "Inserir Atividade", 
+            "Sincronizar Ficheiro", 
+            "Ranking & Utilizadores", 
+            "Analítica Global",
+            "Gerir Pedidos Pendentes"
+        ])
+        
         with aba_app:
             DashboardView.renderizar_formulario()
         with aba_upload:
             UploadView.renderizar_zona_upload()
         with aba_user:
             UsersView.renderizar()
+        with aba_analytics:
+            AdminAnalyticsView.renderizar()
         with aba_admin:
             AdminView.renderizar_painel_admin()
+            
     else:
-        # Atleta normal vê 3 abas
-        aba_app, aba_upload, aba_user = st.tabs(["🚀 Inserir Atividade", "📥 Sincronizar Ficheiro", "🏆 Ranking & Utilizadores"])
+        # Atleta visualiza 3 abas
+        aba_app, aba_upload, aba_user = st.tabs([
+            "Inserir Atividade", 
+            "Sincronizar Ficheiro", 
+            "Ranking & Utilizadores"
+        ])
+        
         with aba_app:
             DashboardView.renderizar_formulario()
         with aba_upload:
@@ -60,11 +75,11 @@ else:
         with aba_user:
             UsersView.renderizar()  
 
+    st.markdown("---")
 
-    st.title("EcoFit - Eventos Desportivos")
-
-    # Caixa de pesquisa ou termo por defeito
-    termo = st.text_input("Pesquisar Eventos:", "proximos eventos desportivos em Portugal")
+    # Secção de Eventos Desportivos
+    st.markdown("### Eventos Desportivos")
+    termo = st.text_input("Pesquisar Eventos:", "próximos eventos desportivos em Portugal")
 
     if termo:
         renderizar_galeria_eventos(termo)
