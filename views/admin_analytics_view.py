@@ -100,7 +100,6 @@ class AdminAnalyticsView:
                 x="temperatura",
                 y="km_corridos",
                 color="tipo_insercao" if "tipo_insercao" in df.columns else None,
-                trendline="ols",
                 title="Relação: Temperatura (°C) vs. Distância Corrida (km)",
                 labels={"temperatura": "Temperatura (°C)", "km_corridos": "Distância (km)"},
                 color_discrete_sequence=["#4da6ff", "#00e676"]
