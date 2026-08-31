@@ -48,38 +48,14 @@ class ActivityModel:
 
 
     @staticmethod
-    def obter_metricas_globais_admin():
-        """Recupera todos os registos de atividades da base de dados para o painel analítico de administração."""
+    def obter_metricas_globais_admin() -> dict:
+        """Recupera todas as atividades registadas na tabela bd_atividades do Supabase para o painel de administração."""
         try:
-            # Substitui 'ecofit.db' pelo nome/caminho correto do teu ficheiro SQLite, se for diferente
-            conn = sqlite3.connect("ecofit.db")
-            conn.row_factory = sqlite3.Row  # Permite retornar os dados como dicionários/chaves
-            cursor = conn.cursor()
-
-            query = """
-                SELECT 
-                    utilizador_id,
-                    data_registo,
-                    km_corridos,
-                    minutos_treino,
-                    copos_agua,
-                    pecas_fruta,
-                    pontos_ganhos,
-                    tipo_insercao,
-                    temperatura,
-                    condicao_clima
-                FROM atividades
-            """
+            supabase = get_supabase_client()
+            resposta = supabase.table('bd_atividades').select('*').execute()
             
-            cursor.execute(query)
-            linhas = cursor.fetchall()
-            conn.close()
-
-            # Converte as linhas da BD numa lista de dicionários
-            dados = [dict(linha) for linha in linhas]
+            dados = resposta.data or []
             return {"dados_completos": dados}
-
         except Exception as e:
-            # Em caso de erro na consulta, retorna a lista vazia sem quebrar a aplicação
-            print(f"Erro ao obter dados analíticos: {e}")
+            st.error(f"Erro ao procurar dados globais no Supabase: {e}")
             return {"dados_completos": []}
