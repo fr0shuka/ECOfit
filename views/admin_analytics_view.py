@@ -20,7 +20,7 @@ class AdminAnalyticsView:
                 }
                 [data-testid="stMetric"] {
                     background-color: #1e222a;
-                    border: 1px solid #2e3440;
+                    border: 1px solid #FF4B4B;
                     padding: 14px 18px;
                     border-radius: 8px;
                 }
