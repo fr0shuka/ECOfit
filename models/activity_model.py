@@ -18,6 +18,28 @@ class ActivityModel:
             return False
 
     @staticmethod
+    def atualizar_atividade(atividade_id: int, novos_dados: dict) -> bool:
+        """Atualiza uma atividade existente pelo seu ID."""
+        try:
+            supabase = get_supabase_client()
+            supabase.table('bd_atividades').update(novos_dados).eq('atividade_id', atividade_id).execute()
+            return True
+        except Exception as e:
+            st.error(f"Erro ao atualizar atividade no Supabase: {e}")
+            return False
+
+    @staticmethod
+    def eliminar_atividade(atividade_id: int) -> bool:
+        """Elimina um registo de atividade pelo seu ID."""
+        try:
+            supabase = get_supabase_client()
+            supabase.table('bd_atividades').delete().eq('atividade_id', atividade_id).execute()
+            return True
+        except Exception as e:
+            st.error(f"Erro ao eliminar atividade no Supabase: {e}")
+            return False
+
+    @staticmethod
     def buscar_por_utilizador(utilizador_id: int) -> list:
         """Recupera todas as atividades registadas para um utilizador específico no Supabase."""
         try:
