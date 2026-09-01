@@ -55,7 +55,6 @@ class AdminAnalyticsView:
         """Carrega os dados diretamente do Supabase através dos métodos reais do ActivityModel/UserModel."""
         cls._injetar_estilos()
 
-        st.markdown(f"### Olá, **{utilizador['nome']}**")
         st.caption("Visão geral do envolvimento, utilizadores e volume global de hábitos.")
 
         # --- CARREGAMENTO DOS DADOS VIA SUPABASE ---
