@@ -50,7 +50,7 @@ class AdminAnalyticsView:
             return
 
         # 2. Cabeçalho Executivo
-        st.caption("Métricas de adesão, impacto das condições climatéricas e volume de atividade da plataforma.")
+        st.caption("Este painel consolida o desempenho global da plataforma EcoFit, monitorizando a adesão dos utilizadores, a dinâmica dos registos e a correlação entre as variáveis climatéricas e o volume de treino registado.")
         st.markdown("---")
 
         # 3. Obtenção dos Dados Globais via Model
@@ -192,6 +192,84 @@ class AdminAnalyticsView:
                 st.plotly_chart(fig_linha, use_container_width=True)
 
         st.markdown("---")
+
+        # SECÇÃO 3.1: ADESÃO E DISTRIBUIÇÃO DA PLATAFORMA
+        st.markdown("##### Métricas de Utilização e Adesão")
+
+        col_hab1, col_hab2 = st.columns(2)
+
+        with col_hab1:
+            # 1. Adesão de Utilizadores (Crescimento Acumulado de Utilizadores Ativos)
+            if 'utilizador_id' in df.columns and 'data_registo' in df.columns:
+                # Identifica a primeira atividade de cada utilizador
+                primeiro_registo = df.groupby('utilizador_id')['data_registo'].min().reset_index()
+                primeiro_registo['data_dia'] = primeiro_registo['data_registo'].dt.strftime('%Y-%m-%d')
+                
+                # Conta novos utilizadores por dia e calcula o acumulado
+                novos_usrs = primeiro_registo.groupby('data_dia').size().reset_index(name='novos')
+                novos_usrs = novos_usrs.sort_values('data_dia')
+                novos_usrs['total_acumulado'] = novos_usrs['novos'].cumsum()
+
+                fig_utilizadores = px.line(
+                    novos_usrs,
+                    x='data_dia',
+                    y='total_acumulado',
+                    markers=True,
+                    title="Adesão de Utilizadores (Acumulado)",
+                    labels={'data_dia': 'Data', 'total_acumulado': 'N.º Utilizadores'},
+                    color_discrete_sequence=['#4da6ff']
+                )
+                fig_utilizadores.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(family="Inter, sans-serif", size=12, color="#94a3b8"),
+                    xaxis=dict(showgrid=False),
+                    yaxis=dict(showgrid=True, gridcolor="#2e3440")
+                )
+                with st.container(border=True):
+                    st.plotly_chart(fig_utilizadores, use_container_width=True)
+
+        with col_hab2:
+            # 2. Adesão de Atividades (Volume Diário por Método de Inserção)
+            if 'data_registo' in df.columns:
+                df['data_dia'] = df['data_registo'].dt.strftime('%Y-%m-%d')
+                col_tipo = 'tipo_insercao' if 'tipo_insercao' in df.columns else None
+                
+                if col_tipo:
+                    df_atividades = df.groupby(['data_dia', col_tipo]).size().reset_index(name='total_atividades')
+                    fig_atividades = px.bar(
+                        df_atividades,
+                        x='data_dia',
+                        y='total_atividades',
+                        color=col_tipo,
+                        title="Adesão de Atividades (Volume Diário)",
+                        labels={'data_dia': 'Data', 'total_atividades': 'Total Atividades', col_tipo: 'Método'},
+                        color_discrete_sequence=['#34d399', '#4da6ff', '#f59e0b']
+                    )
+                else:
+                    df_atividades = df.groupby('data_dia').size().reset_index(name='total_atividades')
+                    fig_atividades = px.bar(
+                        df_atividades,
+                        x='data_dia',
+                        y='total_atividades',
+                        title="Adesão de Atividades (Volume Diário)",
+                        labels={'data_dia': 'Data', 'total_atividades': 'Total Atividades'},
+                        color_discrete_sequence=['#34d399']
+                    )
+
+                fig_atividades.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(family="Inter, sans-serif", size=12, color="#94a3b8"),
+                    xaxis=dict(showgrid=False),
+                    yaxis=dict(showgrid=True, gridcolor="#2e3440")
+                )
+                with st.container(border=True):
+                    st.plotly_chart(fig_atividades, use_container_width=True)
+                    
+
+        st.markdown("---")
+
 
         # SECÇÃO 4: TABELA DETALHADA PARA AUDITORIA
         st.markdown("##### Registo Geral de Atividades")
