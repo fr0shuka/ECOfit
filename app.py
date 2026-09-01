@@ -10,7 +10,7 @@ from services.news_service import renderizar_galeria_eventos
 
 # Configuração da página
 st.set_page_config(
-    page_title="EcoFIT", 
+    page_title="ecoFIT", 
     page_icon="🌱", 
     layout="centered"
 )
@@ -36,7 +36,7 @@ else:
             st.rerun()
 
     # Cabeçalho Principal
-    st.title("Painel de Performance EcoFit")
+    st.title("Plataforma ecoFIT")
     
     # Navegação por Perfil
     if utilizador['perfil'] == 'Admin':
