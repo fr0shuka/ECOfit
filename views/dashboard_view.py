@@ -15,23 +15,44 @@ class DashboardView:
                     padding-top: 1.5rem;
                     max-width: 1100px;
                 }
+                
+                /* Cartão do st.metric com cinza executivo e destaque lateral verde */
                 [data-testid="stMetric"] {
-                    background-color: #1e222a;
-                    border: 1px solid #2e3440;
-                    padding: 14px 18px;
-                    border-radius: 8px;
+                    background-color: #1e222a !important;
+                    border: 1px solid #2e3440 !important;
+                    border-left: 4px solid #10b981 !important; /* Verde EcoFit */
+                    padding: 12px 14px !important;
+                    border-radius: 6px !important;
+                    transition: all 0.2s ease-in-out !important;
                 }
+
+                /* Efeito Hover nos Cartões */
+                [data-testid="stMetric"]:hover {
+                    background-color: #242933 !important;
+                    border-color: #10b981 !important;
+                    transform: translateY(-2px);
+                }
+
+                /* Título / Rótulo da Métrica */
                 [data-testid="stMetricLabel"] {
-                    font-size: 0.8rem !important;
+                    font-size: 0.75rem !important;
                     color: #94a3b8 !important;
-                    font-weight: 500;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
+                    font-weight: 600 !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.05em !important;
                 }
+
+                /* Valor Numérico */
                 [data-testid="stMetricValue"] {
-                    font-size: 1.4rem !important;
-                    font-weight: 700;
+                    font-size: 1.3rem !important;
+                    font-weight: 700 !important;
                     color: #ffffff !important;
+                }
+
+                /* Ícone da Tooltip (Help) em Verde EcoFit */
+                [data-testid="stMetricLabel"] svg {
+                    color: #10b981 !important;
+                    fill: #10b981 !important;
                 }
             </style>
         """, unsafe_allow_html=True)
