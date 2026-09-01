@@ -19,35 +19,7 @@ class DashboardView:
                     padding-top: 1.5rem;
                     max-width: 1100px;
                 }
-                [data-testid="stMetric"] {
-                    background-color: #1e222a !important;
-                    border: 1px solid #2e3440 !important;
-                    border-left: 3px solid #10b981 !important;
-                    padding: 14px 18px !important;
-                    border-radius: 6px !important;
-                }
-                [data-testid="stMetricLabel"] {
-                    font-size: 0.78rem !important;
-                    color: #94a3b8 !important;
-                    font-weight: 600 !important;
-                    text-transform: uppercase !important;
-                    letter-spacing: 0.05em !important;
-                }
-                [data-testid="stMetricValue"] {
-                    font-size: 1.35rem !important;
-                    font-weight: 700 !important;
-                    color: #ffffff !important;
-                }
-                div.stButton > button:first-child {
-                    background-color: #10b981 !important;
-                    color: #ffffff !important;
-                    border: none !important;
-                    font-weight: 600 !important;
-                }
-                div.stButton > button:first-child:hover {
-                    background-color: #059669 !important;
-                }
-
+                
                 /* Estilização dos Cartões Customizados com Tooltip (Hover) */
                 .kpi-container {
                     display: flex;
@@ -55,7 +27,7 @@ class DashboardView:
                     width: 100%;
                     margin-bottom: 20px;
                 }
-
+                
                 .kpi-card {
                     flex: 1;
                     position: relative;
@@ -128,71 +100,33 @@ class DashboardView:
                     visibility: visible;
                     opacity: 1;
                 }
+
+                div.stButton > button:first-child {
+                    background-color: #10b981 !important;
+                    color: #ffffff !important;
+                    border: none !important;
+                    font-weight: 600 !important;
+                }
+                div.stButton > button:first-child:hover {
+                    background-color: #059669 !important;
+                }
             </style>
         """, unsafe_allow_html=True)
 
     @staticmethod
-    def renderizar_formulario():
-        """Renderiza a zona de registo de atividade e o painel analítico completo."""
-        DashboardView._injetar_estilos()
-        temp_real = WeatherService.obter_temperatura_atual()
-        
-        # --- ZONA 1: FORMULÁRIO DE REGISTO MANUAL ---
-        st.title("Registo de Atividade")
-        st.caption("Insira os dados do treino e hábitos diários.")
-        
-        with st.form("form_atividade", clear_on_submit=True):
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                km = st.number_input("Quilómetros Corridos (km)", min_value=0.0, step=0.1)
-                
-                col_h, col_m = st.columns(2)
-                with col_h:
-                    horas = st.number_input("Horas", min_value=0, step=1, value=0)
-                with col_m:
-                    minutos_input = st.number_input("Minutos", min_value=0, max_value=59, step=1, value=0)
-            
-            with col2:
-                copos = st.number_input("Copos de Água", min_value=0, step=1)
-                fruta = st.number_input("Peças de Fruta", min_value=0, step=1)
-
-            submetido = st.form_submit_button("Salvar Atividade", type="primary", use_container_width=True)
-            
-            if submetido:
-                total_minutos = int((horas * 60) + minutos_input)
-                
-                if km == 0 and total_minutos == 0 and copos == 0 and fruta == 0:
-                    st.warning("Preencha pelo menos um dos campos para registar a atividade.")
-                else:
-                    id_utilizador = st.session_state['utilizador_logado']['utilizador_id']
-                    pontos = int((km * 10) + (total_minutos * 1) + (copos * 2) + (fruta * 5))
-                    
-                    payload = {
-                        "utilizador_id": id_utilizador,
-                        "data_registo": str(date.today()),
-                        "km_corridos": km,
-                        "minutos_treino": total_minutos,
-                        "copos_agua": copos,
-                        "pecas_fruta": fruta,
-                        "pontos_ganhos": pontos,
-                        "tipo_insercao": "Manual",
-                        "temperatura": float(temp_real),
-                        "condicao_clima": "Manual"
-                    }
-                    
-                    if ActivityModel.salvar_atividade(payload):
-                        st.toast(f"Atividade registada com sucesso (+{pontos} pts).", icon=None)
-                        st.rerun()
-
-        st.markdown("---")
-
-        # --- ZONA 2: PAINEL ANALÍTICO ---
-        DashboardView.renderizar_graficos_e_kpis()
+    def renderizar_card_html(titulo: str, valor: str, legenda_tooltip: str) -> str:
+        """Gera a estrutura HTML de um cartão com suporte a Tooltip em Hover."""
+        return f"""
+        <div class="kpi-card">
+            <div class="kpi-title">{titulo}</div>
+            <div class="kpi-value">{valor}</div>
+            <span class="tooltip-text">{legenda_tooltip}</span>
+        </div>
+        """
 
     @staticmethod
     def renderizar_graficos_e_kpis():
-        """Calcula métricas com Pandas e renderiza gráficos com Plotly."""
+        """Calcula métricas com Pandas e renderiza cartões com legenda hover."""
         st.markdown("##### Análise de Performance e Métricas")
         
         id_utilizador = st.session_state['utilizador_logado']['utilizador_id']
@@ -211,15 +145,24 @@ class DashboardView:
         df['pontos_ganhos'] = pd.to_numeric(df['pontos_ganhos'], errors='coerce').fillna(0)
         df = df.sort_values(by='data_registo', ascending=True)
 
-        # Cartões KPI Em Linha
-        col1, col2, col3, col4, col5 = st.columns(5)
-        col1.metric("Distância", f"{df['km_corridos'].sum():.1f} km")
-        col2.metric("Tempo Total", f"{int(df['minutos_treino'].sum())} min")
-        col3.metric("Hidratação", f"{int(df['copos_agua'].sum())} copos")
-        col4.metric("Fruta", f"{int(df['pecas_fruta'].sum())} peças")
-        col5.metric("Pontos Acumulados", f"{int(df['pontos_ganhos'].sum())} pts")
+        # Cálculo dos Totais
+        total_km = f"{df['km_corridos'].sum():.1f} km"
+        total_min = f"{int(df['minutos_treino'].sum())} min"
+        total_agua = f"{int(df['copos_agua'].sum())} copos"
+        total_fruta = f"{int(df['pecas_fruta'].sum())} peças"
+        total_pontos = f"{int(df['pontos_ganhos'].sum())} pts"
 
-        st.markdown("<br>", unsafe_allow_html=True)
+        # --- CARTÕES COM TOOLTIP / LEGENDA NO HOVER ---
+        html_cards = f"""
+        <div class="kpi-container">
+            {DashboardView.renderizar_card_html("Distância", total_km, "Total de quilómetros percorridos em corridas/caminhadas.")}
+            {DashboardView.renderizar_card_html("Tempo Total", total_min, "Tempo acumulado gasto em sessões de treino.")}
+            {DashboardView.renderizar_card_html("Hidratação", total_agua, "Quantidade total de copos de água ingeridos.")}
+            {DashboardView.renderizar_card_html("Fruta", total_fruta, "Doses de fruta consumidas durante o período.")}
+            {DashboardView.renderizar_card_html("Pontos", total_pontos, "Pontuação total acumulada com base nas atividades.")}
+        </div>
+        """
+        st.markdown(html_cards, unsafe_allow_html=True)
 
         # Gráfico Executivo Verde EcoFit
         df_diario = df.groupby(df['data_registo'].dt.strftime('%Y-%m-%d'))['pontos_ganhos'].sum().reset_index()
@@ -243,29 +186,3 @@ class DashboardView:
         
         with st.container(border=True):
             st.plotly_chart(fig_bar, use_container_width=True)
-
-
-
-    @staticmethod
-    def renderizar_card_html(titulo: str, valor: str, legenda_tooltip: str) -> str:
-        """Gera a estrutura HTML de um cartão com suporte a Tooltip em Hover."""
-        return f"""
-        <div class="kpi-card">
-            <div class="kpi-title">{titulo}</div>
-            <div class="kpi-value">{valor}</div>
-            <span class="tooltip-text">{legenda_tooltip}</span>
-        </div>
-        """
-
-    # Código de renderização na view (substitui os st.columns com st.metric):
-    html_cards = f"""
-    <div class="kpi-container">
-        {DashboardView.renderizar_card_html("Distância", total_km, "Total de quilómetros percorridos em corridas/caminhadas.")}
-        {DashboardView.renderizar_card_html("Tempo Total", total_min, "Tempo acumulado gasto em sessões de treino.")}
-        {DashboardView.renderizar_card_html("Hidratação", total_agua, "Quantidade total de copos de água ingeridos.")}
-        {DashboardView.renderizar_card_html("Fruta", total_fruta, "Doses de fruta consumidas durante o período.")}
-        {DashboardView.renderizar_card_html("Pontos", total_pontos, "Pontuação total acumulada com base nas atividades.")}
-    </div>
-    """
-
-    st.markdown(html_cards, unsafe_allow_html=True)
