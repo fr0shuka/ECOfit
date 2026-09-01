@@ -50,7 +50,6 @@ class AdminAnalyticsView:
             return
 
         # 2. Cabeçalho Executivo
-        st.title("Painel de Analítica Global")
         st.caption("Métricas de adesão, impacto das condições climatéricas e volume de atividade da plataforma.")
         st.markdown("---")
 
@@ -89,7 +88,7 @@ class AdminAnalyticsView:
         st.markdown("<br>", unsafe_allow_html=True)
 
         # SECÇÃO 2: ANÁLISE DE IMPACTO CLIMATÉRICO NOS TREINOS
-        st.markdown("##### Análise de Impacto Climatérico")
+        st.markdown("##### Análise de impacto Climatérico")
         
         col_clima1, col_clima2 = st.columns(2)
 
@@ -144,7 +143,7 @@ class AdminAnalyticsView:
         st.markdown("<br>", unsafe_allow_html=True)
 
         # SECÇÃO 3: ADESÃO E DISTRIBUIÇÃO DA PLATAFORMA
-        st.markdown("##### Métricas de Utilização e Hábitos")
+        st.markdown("##### Métricas de utilização e hábitos")
 
         col_hab1, col_hab2 = st.columns(2)
 
@@ -195,7 +194,7 @@ class AdminAnalyticsView:
         st.markdown("---")
 
         # SECÇÃO 4: TABELA DETALHADA PARA AUDITORIA
-        st.markdown("##### Registo Geral de Atividades para Auditoria")
+        st.markdown("##### Registo Geral de Atividades")
 
         colunas_exibir = {
             'data_registo': 'Data',
