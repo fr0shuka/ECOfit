@@ -52,9 +52,10 @@ else:
         usr_id = utilizador.get('id') or utilizador.get('utilizador_id') or utilizador.get('id_utilizador')
         
         MyTrainingsView.renderizar(
-            utilizador_id=usr_id, 
-            controller_atividades=st.session_state.get('controller_atividades')
+        utilizador_id=usr_id, 
+        activity_model=ActivityModel
         )
+        
     else:
         # Navegação por Perfil
         if utilizador['perfil'] == 'Admin':
