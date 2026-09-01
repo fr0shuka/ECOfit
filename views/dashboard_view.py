@@ -190,6 +190,3 @@ class DashboardView:
         
         with st.container(border=True):
             st.plotly_chart(fig_bar, use_container_width=True)
-
-
-   
