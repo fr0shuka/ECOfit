@@ -9,7 +9,22 @@ from controllers.user_controller import UserController
 
 class UsersView:
     @staticmethod
+    def _injetar_estilos():
+        st.markdown("""
+            <style>
+                button[data-baseweb="tab"] {
+                    color: #94a3b8 !important;
+                }
+                button[data-baseweb="tab"][aria-selected="true"] {
+                    color: #10b981 !important;
+                    border-bottom-color: #10b981 !important;
+                }
+            </style>
+        """, unsafe_allow_html=True)
+
+    @staticmethod
     def renderizar():
+        UsersView._injetar_estilos()
         st.title("Classificação Geral")
         st.caption("Desempenho acumulado da comunidade EcoFit.")
 
@@ -92,7 +107,7 @@ class UsersView:
                 col_pos, col_nome, col_val = st.columns([1, 4, 2], vertical_alignment="center")
 
                 with col_pos:
-                    st.markdown(f"**#{idx}**")
+                    st.markdown(f"<span style='color:#10b981; font-weight:bold;'>#{idx}</span>", unsafe_allow_html=True)
                 with col_nome:
                     st.markdown(f"**{row['nome']}**")
                 with col_val:

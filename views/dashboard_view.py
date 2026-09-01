@@ -7,6 +7,10 @@ from services.weather_service import WeatherService
 
 
 class DashboardView:
+    VERDE_ECOFIT = "#10b981"
+    CINZA_TEXTO = "#94a3b8"
+    CINZA_GRELHA = "#2e3440"
+
     @staticmethod
     def _injetar_estilos():
         st.markdown("""
@@ -16,22 +20,32 @@ class DashboardView:
                     max-width: 1100px;
                 }
                 [data-testid="stMetric"] {
-                    background-color: #1e222a;
-                    border: 1px solid #2e3440;
-                    padding: 14px 18px;
-                    border-radius: 8px;
+                    background-color: #1e222a !important;
+                    border: 1px solid #2e3440 !important;
+                    border-left: 3px solid #10b981 !important;
+                    padding: 14px 18px !important;
+                    border-radius: 6px !important;
                 }
                 [data-testid="stMetricLabel"] {
-                    font-size: 0.8rem !important;
+                    font-size: 0.78rem !important;
                     color: #94a3b8 !important;
-                    font-weight: 500;
-                    text-transform: uppercase;
-                    letter-spacing: 0.05em;
+                    font-weight: 600 !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.05em !important;
                 }
                 [data-testid="stMetricValue"] {
-                    font-size: 1.4rem !important;
-                    font-weight: 700;
+                    font-size: 1.35rem !important;
+                    font-weight: 700 !important;
                     color: #ffffff !important;
+                }
+                div.stButton > button:first-child {
+                    background-color: #10b981 !important;
+                    color: #ffffff !important;
+                    border: none !important;
+                    font-weight: 600 !important;
+                }
+                div.stButton > button:first-child:hover {
+                    background-color: #059669 !important;
                 }
             </style>
         """, unsafe_allow_html=True)
@@ -126,7 +140,7 @@ class DashboardView:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Gráfico Executivo com Plotly
+        # Gráfico Executivo Verde EcoFit
         df_diario = df.groupby(df['data_registo'].dt.strftime('%Y-%m-%d'))['pontos_ganhos'].sum().reset_index()
         
         fig_bar = px.bar(
@@ -135,15 +149,15 @@ class DashboardView:
             y='pontos_ganhos',
             title="Evolução Diária de Pontuações",
             labels={'data_registo': 'Data', 'pontos_ganhos': 'Pontos'},
-            color_discrete_sequence=['#4da6ff']
+            color_discrete_sequence=[DashboardView.VERDE_ECOFIT]
         )
         fig_bar.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
             margin=dict(l=20, r=20, t=40, b=20),
-            font=dict(family="Inter, sans-serif", size=12, color="#94a3b8"),
+            font=dict(family="Inter, sans-serif", size=12, color=DashboardView.CINZA_TEXTO),
             xaxis=dict(showgrid=False),
-            yaxis=dict(showgrid=True, gridcolor="#2e3440")
+            yaxis=dict(showgrid=True, gridcolor=DashboardView.CINZA_GRELHA)
         )
         
         with st.container(border=True):
