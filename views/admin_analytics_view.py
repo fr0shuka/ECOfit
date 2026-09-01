@@ -129,3 +129,17 @@ class AdminAnalyticsView:
 
             with st.container(border=True):
                 st.plotly_chart(fig, use_container_width=True)
+
+
+
+     @classmethod
+    def renderizar(cls):
+        """Ponto de entrada chamado diretamente pelo app.py"""
+        # Obter dados dos models / session state caso não sejam passados
+        from models.activity_model import ActivityModel
+        from models.user_model import UserModel
+        
+        dados_atividades = ActivityModel.buscar_todas() if hasattr(ActivityModel, 'buscar_todas') else []
+        dados_utilizadores = UserModel.buscar_todos() if hasattr(UserModel, 'buscar_todos') else []
+        
+        cls.renderizar_view(dados_atividades, dados_utilizadores)
