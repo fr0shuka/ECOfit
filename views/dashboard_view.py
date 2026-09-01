@@ -116,13 +116,38 @@ class DashboardView:
         df['pontos_ganhos'] = pd.to_numeric(df['pontos_ganhos'], errors='coerce').fillna(0)
         df = df.sort_values(by='data_registo', ascending=True)
 
-        # Cartões KPI Em Linha
+       # Cartões KPI Em Linha (Com Tooltips nativos e nomes otimizados)
         col1, col2, col3, col4, col5 = st.columns(5)
-        col1.metric("Distância", f"{df['km_corridos'].sum():.1f} km")
-        col2.metric("Tempo Total", f"{int(df['minutos_treino'].sum())} min")
-        col3.metric("Hidratação", f"{int(df['copos_agua'].sum())} copos")
-        col4.metric("Fruta", f"{int(df['pecas_fruta'].sum())} peças")
-        col5.metric("Pontos Acumulados", f"{int(df['pontos_ganhos'].sum())} pts")
+
+        col1.metric(
+            label="Distância", 
+            value=f"{df['km_corridos'].sum():.1f} km",
+            help="Total de quilómetros percorridos em corridas e caminhadas."
+        )
+
+        col2.metric(
+            label="Tempo", 
+            value=f"{int(df['minutos_treino'].sum())} min",
+            help="Tempo acumulado gasto em sessões de treino."
+        )
+
+        col3.metric(
+            label="Hidratação", 
+            value=f"{int(df['copos_agua'].sum())} copos",
+            help="Quantidade total de copos de água ingeridos."
+        )
+
+        col4.metric(
+            label="Fruta", 
+            value=f"{int(df['pecas_fruta'].sum())} peças",
+            help="Doses de fruta consumidas durante o período."
+        )
+
+        col5.metric(
+            label="Pontos", 
+            value=f"{int(df['pontos_ganhos'].sum())} pts",
+            help="Pontuação total acumulada com base nas atividades registadas."
+        )
 
         st.markdown("<br>", unsafe_allow_html=True)
 
