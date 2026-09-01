@@ -8,6 +8,7 @@ from views.admin_analytics_view import AdminAnalyticsView
 from views.my_trainings_view import MyTrainingsView
 from views.components import renderizar_meteo_sidebar
 from services.news_service import renderizar_galeria_eventos
+from controllers.activity_controller import ActivityController
 
 # Configuração da página
 st.set_page_config(
@@ -15,6 +16,14 @@ st.set_page_config(
     page_icon="🌱", 
     layout="centered"
 )
+
+def inicializar_estado():
+    """Garante que todos os controladores e estado inicial existem no session_state."""
+    if 'controller_atividades' not in st.session_state:
+        st.session_state.controller_atividades = ActivityController()
+
+
+inicializar_estado()
 
 # Fluxo de navegação baseado no estado da sessão
 if 'utilizador_logado' not in st.session_state:
