@@ -64,7 +64,7 @@ class AdminView:
             return
 
         # Cabeçalho Limpo
-        st.title("Painel de Administração")
+        st.markdown("Painel de Administração")
         st.caption("Gestão de acessos e validação de pendentes.")
         st.markdown("---")
 

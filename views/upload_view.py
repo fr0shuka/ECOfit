@@ -7,7 +7,7 @@ from controllers.file_controller import FileController
 class UploadView:
     @staticmethod
     def renderizar_zona_upload():
-        st.title("Sincronização de Ficheiro")
+        st.markdown("Sincronização de Ficheiro")
         st.caption("Importação de dados de atividades via CSV ou Excel.")
         
         utilizador = st.session_state.get('utilizador_logado')

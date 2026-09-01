@@ -14,6 +14,42 @@ st.set_page_config(
     page_icon="🌱", 
     layout="centered"
 )
+# Injeção de Estilos Globais para toda a aplicação EcoFit
+st.markdown("""
+    <style>
+        /* 1. BOTÕES PRIMÁRIOS (Inserir / Submeter Atividades) */
+        button[data-testid="baseButton-primary"],
+        div.stButton > button[kind="primary"] {
+            background-color: #10b981 !important;
+            border-color: #10b981 !important;
+            color: #ffffff !important;
+            font-weight: 600;
+        }
+
+        button[data-testid="baseButton-primary"]:hover,
+        div.stButton > button[kind="primary"]:hover {
+            background-color: #059669 !important;
+            border-color: #059669 !important;
+        }
+
+        /* 2. SEPARADORES (TABS) EM TOM VERDE */
+        /* Texto da tab ativa */
+        button[data-baseweb="tab"][aria-selected="true"] p {
+            color: #10b981 !important;
+            font-weight: 600 !important;
+        }
+
+        /* Linha inferior da tab ativa */
+        div[data-baseweb="tab-highlight"] {
+            background-color: #10b981 !important;
+        }
+
+        /* Tab ao passar o rato (hover) */
+        button[data-baseweb="tab"]:hover p {
+            color: #34d399 !important;
+        }
+    </style>
+""", unsafe_allow_html=True)
 
 # Fluxo de navegação baseado no estado da sessão
 if 'utilizador_logado' not in st.session_state:

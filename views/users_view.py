@@ -10,7 +10,7 @@ from controllers.user_controller import UserController
 class UsersView:
     @staticmethod
     def renderizar():
-        st.title("Classificação Geral")
+        st.title("Classificação geral")
         st.caption("Desempenho acumulado da comunidade EcoFit.")
 
         df_users = UserController.obter_dados_ranking()
