@@ -13,7 +13,7 @@ st.set_page_config(
     page_title="ecoFIT", 
     page_icon="🌱", 
     layout="centered"
-)
+
 # Injeção de Estilos Globais para toda a aplicação EcoFit
 st.markdown("""
     <style>
@@ -50,6 +50,7 @@ st.markdown("""
         }
     </style>
 """, unsafe_allow_html=True)
+)
 
 # Fluxo de navegação baseado no estado da sessão
 if 'utilizador_logado' not in st.session_state:
