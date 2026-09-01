@@ -4,6 +4,29 @@ from datetime import datetime
 
 class MyTrainingsView:
     @staticmethod
+    def renderizar(utilizador_id, controller_atividades=None):
+        st.subheader("Os Meus Treinos")
+
+        # 1. Verificação de segurança caso o controller seja None
+        if controller_atividades is None:
+            # Tenta obter diretamente do model ou session_state como fallback
+            from models.activity_model import ActivityModel
+            atividades = ActivityModel.obter_por_utilizador(utilizador_id) if hasattr(ActivityModel, 'obter_por_utilizador') else []
+        else:
+            # Tenta os nomes de métodos mais comuns do controller
+            if hasattr(controller_atividades, 'obter_atividades_por_utilizador'):
+                atividades = controller_atividades.obter_atividades_por_utilizador(utilizador_id)
+            elif hasattr(controller_atividades, 'obter_por_utilizador'):
+                atividades = controller_atividades.obter_por_utilizador(utilizador_id)
+            else:
+                atividades = []
+
+        if not atividades:
+            st.info("Ainda não registou nenhuma atividade. Utilize a aba 'Inserir Atividade' para começar!")
+            return
+
+            
+    @staticmethod
     def renderizar(utilizador_id, controller_atividades):
         """
         Renderiza a vista de histórico e edição de treinos do utilizador.
