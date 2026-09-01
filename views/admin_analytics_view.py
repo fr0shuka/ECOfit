@@ -1,114 +1,92 @@
+import sys
+import os
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from models.activity_model import ActivityModel
-from models.user_model import UserModel
 
 
 class AdminAnalyticsView:
-    VERDE_ECOFIT = "#10b981"
-    CINZA_TEXTO = "#94a3b8"
-    CINZA_GRELHA = "#2e3440"
-
     @staticmethod
     def _injetar_estilos():
         st.markdown("""
             <style>
                 .main .block-container {
                     padding-top: 1.5rem;
-                    max-width: 1100px;
+                    max-width: 1200px;
                 }
-                
                 [data-testid="stMetric"] {
-                    background-color: #1e222a !important;
-                    border: 1px solid #2e3440 !important;
-                    border-left: 4px solid #10b981 !important;
-                    padding: 12px 14px !important;
-                    border-radius: 6px !important;
-                    transition: all 0.2s ease-in-out !important;
+                    background-color: #1e222a;
+                    border: 1px solid #2e3440;
+                    padding: 14px 18px;
+                    border-radius: 8px;
                 }
-
-                [data-testid="stMetric"]:hover {
-                    background-color: #242933 !important;
-                    border-color: #10b981 !important;
-                    transform: translateY(-2px);
-                }
-
                 [data-testid="stMetricLabel"] {
-                    font-size: 0.75rem !important;
+                    font-size: 0.78rem !important;
                     color: #94a3b8 !important;
-                    font-weight: 600 !important;
-                    text-transform: uppercase !important;
-                    letter-spacing: 0.05em !important;
+                    font-weight: 500;
+                    text-transform: uppercase;
+                    letter-spacing: 0.05em;
                 }
-
                 [data-testid="stMetricValue"] {
-                    font-size: 1.3rem !important;
-                    font-weight: 700 !important;
+                    font-size: 1.35rem !important;
+                    font-weight: 700;
                     color: #ffffff !important;
                 }
             </style>
         """, unsafe_allow_html=True)
 
-    @classmethod
-    def renderizar(cls):
-        """Carrega os dados diretamente do Supabase através dos métodos reais do ActivityModel/UserModel."""
-        cls._injetar_estilos()
+    @staticmethod
+    def renderizar():
+        AdminAnalyticsView._injetar_estilos()
 
-        st.caption("Visão geral do envolvimento, utilizadores e volume global de hábitos.")
-
-        # --- CARREGAMENTO DOS DADOS VIA SUPABASE ---
-        # Chama a função exata que tens definida no ActivityModel
-        metricas_res = ActivityModel.obter_metricas_globais_admin()
-        dados_atividades = metricas_res.get("dados_completos", [])
-
-        # Procura utilizadores no UserModel
-        dados_utilizadores = []
-        try:
-            if hasattr(UserModel, 'buscar_todos'):
-                dados_utilizadores = UserModel.buscar_todos()
-            elif hasattr(UserModel, 'listar_todos'):
-                dados_utilizadores = UserModel.listar_todos()
-            elif hasattr(UserModel, 'obter_todos'):
-                dados_utilizadores = UserModel.obter_todos()
-        except Exception:
-            dados_utilizadores = []
-
-        if not dados_atividades:
-            st.warning("Nenhum registo de atividade encontrado na tabela bd_atividades do Supabase.")
+        # 1. Controlo de Acesso
+        utilizador = st.session_state.get('utilizador_logado')
+        if not utilizador or utilizador.get('perfil') != 'Admin':
+            st.error("Acesso restrito a administradores.")
             return
 
-        df_act = pd.DataFrame(dados_atividades)
-        df_usr = pd.DataFrame(dados_utilizadores) if dados_utilizadores else pd.DataFrame()
-
-        # Conversão numérica defensiva
-        for col in ['pontos_ganhos', 'km_corridos', 'minutos_treino']:
-            if col in df_act.columns:
-                df_act[col] = pd.to_numeric(df_act[col], errors='coerce').fillna(0)
-            else:
-                df_act[col] = 0
-
-        # Totais para os Cartões KPI
-        if not df_usr.empty:
-            total_utilizadores = len(df_usr)
-        elif 'utilizador_id' in df_act.columns:
-            total_utilizadores = df_act['utilizador_id'].nunique()
-        else:
-            total_utilizadores = 0
-
-        total_registos = len(df_act)
-        total_pontos = f"{int(df_act['pontos_ganhos'].sum()):,}".replace(",", " ")
-        total_km = f"{df_act['km_corridos'].sum():.1f} km"
-
-        # --- CARTÕES KPI (Design System EcoFit) ---
-        col1, col2, col3, col4 = st.columns(4)
-
-        col1.metric("Utilizadores", str(total_utilizadores), help="Total de utilizadores registados na plataforma.")
-        col2.metric("Atividades", str(total_registos), help="Número total de registos de hábitos no Supabase.")
-        col3.metric("Pontos Globais", total_pontos, help="Soma total de pontos acumulados.")
-        col4.metric("Distância Total", total_km, help="Volume total de quilómetros acumulados.")
-
+        # 2. Cabeçalho Executivo
+        st.caption("Métricas de adesão, impacto das condições climatéricas e volume de atividade da plataforma.")
         st.markdown("---")
+
+        # 3. Obtenção dos Dados Globais via Model
+        # Assumindo a função que recolhe os registos de todos os utilizadores
+        dados_brutos = ActivityModel.obter_metricas_globais_admin().get("dados_completos", [])
+
+        if not dados_brutos:
+            st.info("Não existem dados de atividades registados na plataforma para análise.")
+            return
+
+        # 4. Tratamento dos Dados com Pandas
+        df = pd.DataFrame(dados_brutos)
+        df['data_registo'] = pd.to_datetime(df['data_registo'])
+        df['km_corridos'] = pd.to_numeric(df.get('km_corridos', 0), errors='coerce').fillna(0)
+        df['minutos_treino'] = pd.to_numeric(df.get('minutos_treino', 0), errors='coerce').fillna(0)
+        df['temperatura'] = pd.to_numeric(df.get('temperatura', 0), errors='coerce').fillna(0)
+        df['copos_agua'] = pd.to_numeric(df.get('copos_agua', 0), errors='coerce').fillna(0)
+        df['pecas_fruta'] = pd.to_numeric(df.get('pecas_fruta', 0), errors='coerce').fillna(0)
+        df['pontos_ganhos'] = pd.to_numeric(df.get('pontos_ganhos', 0), errors='coerce').fillna(0)
+
+        # SECÇÃO 1: METRICAS GLOBAIS DE PLATAFORMA (KPIs)
+        total_atividades = len(df)
+        total_kms = df['km_corridos'].sum()
+        total_horas = df['minutos_treino'].sum() / 60
+        temp_media = df[df['temperatura'] > 0]['temperatura'].mean() if (df['temperatura'] > 0).any() else 0
+        utilizadores_ativos = df['utilizador_id'].nunique() if 'utilizador_id' in df.columns else 1
+
+        col1, col2, col3, col4, col5 = st.columns(5)
+        col1.metric("Total Atividades", f"{total_atividades}")
+        col2.metric("Utilizadores Ativos", f"{utilizadores_ativos}")
+        col3.metric("Volume Corrida", f"{total_kms:.1f} km")
+        col4.metric("Horas de Treino", f"{total_horas:.1f} h")
+        col5.metric("Temp. Média Treinos", f"{temp_media:.1f} °C")
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
 
         # --- GRÁFICO DE EVOLUÇÃO ---
         st.markdown("##### Análise de evolução diária")
@@ -138,8 +116,8 @@ class AdminAnalyticsView:
             with st.container(border=True):
                 st.plotly_chart(fig, use_container_width=True)
 
-
-        st.markdown("##### Análise de impacto Climatérico")
+        # SECÇÃO 2: ANÁLISE DE IMPACTO CLIMATÉRICO NOS TREINOS
+        st.markdown("##### Análise de Impacto Climatérico")
         
         col_clima1, col_clima2 = st.columns(2)
 
@@ -194,7 +172,7 @@ class AdminAnalyticsView:
         st.markdown("<br>", unsafe_allow_html=True)
 
         # SECÇÃO 3: ADESÃO E DISTRIBUIÇÃO DA PLATAFORMA
-        st.markdown("##### Análise de utilização e hábitos")
+        st.markdown("##### Métricas de Utilização e Hábitos")
 
         col_hab1, col_hab2 = st.columns(2)
 
@@ -245,7 +223,7 @@ class AdminAnalyticsView:
         st.markdown("---")
 
         # SECÇÃO 4: TABELA DETALHADA PARA AUDITORIA
-        st.markdown("##### Registo Geral de atividades")
+        st.markdown("##### Registo Geral de Atividades para Auditoria")
 
         colunas_exibir = {
             'data_registo': 'Data',
