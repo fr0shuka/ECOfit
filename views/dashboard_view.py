@@ -49,11 +49,7 @@ class DashboardView:
                     color: #ffffff !important;
                 }
 
-                /* Ícone da Tooltip (Help) em Verde EcoFit */
-                [data-testid="stMetricLabel"] svg {
-                    color: #10b981 !important;
-                    fill: #10b981 !important;
-                }
+                
             </style>
         """, unsafe_allow_html=True)
 
