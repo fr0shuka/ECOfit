@@ -71,48 +71,19 @@ class AdminAnalyticsView:
         df['pecas_fruta'] = pd.to_numeric(df.get('pecas_fruta', 0), errors='coerce').fillna(0)
         df['pontos_ganhos'] = pd.to_numeric(df.get('pontos_ganhos', 0), errors='coerce').fillna(0)
 
-       # SECÇÃO 1: METRICAS GLOBAIS DE PLATAFORMA (KPIs)
+        # SECÇÃO 1: METRICAS GLOBAIS DE PLATAFORMA (KPIs)
         total_atividades = len(df)
         total_kms = df['km_corridos'].sum()
         total_horas = df['minutos_treino'].sum() / 60
         temp_media = df[df['temperatura'] > 0]['temperatura'].mean() if (df['temperatura'] > 0).any() else 0
         utilizadores_ativos = df['utilizador_id'].nunique() if 'utilizador_id' in df.columns else 1
 
-        # Cálculos de apoio para subtextos contextuais
-        media_atividades_usr = total_atividades / utilizadores_ativos if utilizadores_ativos > 0 else 0
-        media_km_usr = total_kms / utilizadores_ativos if utilizadores_ativos > 0 else 0
-
         col1, col2, col3, col4, col5 = st.columns(5)
-
-        with col1:
-            with st.container(border=True):
-                st.caption("📋 Total Atividades")
-                st.subheader(f"{total_atividades}")
-                st.caption(f"~{media_atividades_usr:.1f} / utilizador")
-
-        with col2:
-            with st.container(border=True):
-                st.caption("👥 Utilizadores Ativos")
-                st.subheader(f"{utilizadores_ativos}")
-                st.caption("Com registos efetuados")
-
-        with col3:
-            with st.container(border=True):
-                st.caption("🏃 Volume Corrida")
-                st.subheader(f"{total_kms:.1f} km")
-                st.caption(f"~{media_km_usr:.1f} km / utilizador")
-
-        with col4:
-            with st.container(border=True):
-                st.caption("⏱️ Horas de Treino")
-                st.subheader(f"{total_horas:.1f} h")
-                st.caption(f"{df['minutos_treino'].sum():.0f} min acumulados")
-
-        with col5:
-            with st.container(border=True):
-                st.caption("🌡️ Temp. Média")
-                st.subheader(f"{temp_media:.1f} °C")
-                st.caption("Nos dias de treino")
+        col1.metric("Total Atividades", f"{total_atividades}")
+        col2.metric("Utilizadores Ativos", f"{utilizadores_ativos}")
+        col3.metric("Volume Corrida", f"{total_kms:.1f} km")
+        col4.metric("Horas de Treino", f"{total_horas:.1f} h")
+        col5.metric("Temp. Média Treinos", f"{temp_media:.1f} °C")
 
         st.markdown("<br>", unsafe_allow_html=True)
 
