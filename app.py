@@ -34,13 +34,13 @@ else:
     index=0
 )
         
-        # Widget meteorológico
-        renderizar_meteo_sidebar()
+    # Widget meteorológico
+    renderizar_meteo_sidebar()
 
-        if st.button("Terminar Sessão (Logout)", use_container_width=True):
-            from controllers.auth_controller import AuthController
-            AuthController.logout()
-            st.rerun()
+    if st.button("Terminar Sessão (Logout)", use_container_width=True):
+        from controllers.auth_controller import AuthController
+        AuthController.logout()
+        st.rerun()
 
 
     if menu_opcao == "🏃‍♂️ Os Meus Treinos":
