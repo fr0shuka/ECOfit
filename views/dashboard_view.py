@@ -19,7 +19,7 @@ class DashboardView:
                 /* Cartão do st.metric com cinza executivo e destaque lateral verde */
                 [data-testid="stMetric"] {
                     background-color: #1e222a !important;
-                    border: 1px solid #FF4B4B !important;
+                    border: 1px solid #2e3440 !important;
                     border-left: 4px solid #FF4B4B !important; /* Verde EcoFit */
                     padding: 12px 14px !important;
                     border-radius: 6px !important;
