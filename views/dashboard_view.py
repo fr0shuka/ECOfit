@@ -60,7 +60,7 @@ class DashboardView:
         temp_real = WeatherService.obter_temperatura_atual()
         
         # --- ZONA 1: FORMULÁRIO DE REGISTO MANUAL ---
-        st.title("Registo de Atividade")
+        st.markdown("Registo de Atividade")
         st.caption("Insira os dados do treino e hábitos diários.")
         
         with st.form("form_atividade", clear_on_submit=True):
