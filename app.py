@@ -5,6 +5,7 @@ from views.admin_view import AdminView
 from views.upload_view import UploadView
 from views.users_view import UsersView
 from views.admin_analytics_view import AdminAnalyticsView
+from views.my_trainings_view import MyTrainingsView
 from views.components import renderizar_meteo_sidebar
 from services.news_service import renderizar_galeria_eventos
 
@@ -14,7 +15,6 @@ st.set_page_config(
     page_icon="🌱", 
     layout="centered"
 )
-
 
 # Fluxo de navegação baseado no estado da sessão
 if 'utilizador_logado' not in st.session_state:
@@ -28,28 +28,28 @@ else:
         st.caption(f"Perfil: {utilizador['perfil']} | Estado: {utilizador['estado']}")
         st.markdown("---")
 
-    menu_opcao = st.sidebar.radio(
-    "Navegação",
-    ["Painel Principal", "Os Meus Treinos"],
-    index=0
-)
-        
-    # Widget meteorológico
-    renderizar_meteo_sidebar()
+        menu_opcao = st.sidebar.radio(
+            "Navegação",
+            ["Painel Principal", "Os Meus Treinos"],
+            index=0
+        )
+            
+        # Widget meteorológico
+        renderizar_meteo_sidebar()
 
-    if st.button("Terminar Sessão (Logout)", use_container_width=True):
-        from controllers.auth_controller import AuthController
-        AuthController.logout()
-        st.rerun()
+        if st.button("Terminar Sessão (Logout)", use_container_width=True):
+            from controllers.auth_controller import AuthController
+            AuthController.logout()
+            st.rerun()
 
-
-    if menu_opcao == "🏃‍♂️ Os Meus Treinos":
-    MyTrainingsView.renderizar(
-        utilizador_id=utilizador['id'], 
-        controller_atividades=controller_atividades
-    )
     # Cabeçalho Principal
     st.title("Plataforma ecoFIT")
+
+    if menu_opcao == "Os Meus Treinos":
+        MyTrainingsView.renderizar(
+            utilizador_id=utilizador['id'], 
+            controller_atividades=st.session_state.get('controller_atividades')
+        )
     else:
         # Navegação por Perfil
         if utilizador['perfil'] == 'Admin':
