@@ -13,44 +13,60 @@ st.set_page_config(
     page_title="ecoFIT", 
     page_icon="🌱", 
     layout="centered"
+)
 
-# Injeção de Estilos Globais para toda a aplicação EcoFit
+# Injeção de Estilos Globais Reforçados para a EcoFit
 st.markdown("""
     <style>
         /* 1. BOTÕES PRIMÁRIOS (Inserir / Submeter Atividades) */
-        button[data-testid="baseButton-primary"],
-        div.stButton > button[kind="primary"] {
+        button[kind="primary"],
+        button[data-testid="stBaseButton-primary"],
+        .stButton > button[kind="primary"] {
             background-color: #10b981 !important;
             border-color: #10b981 !important;
             color: #ffffff !important;
-            font-weight: 600;
+            font-weight: 600 !important;
         }
 
-        button[data-testid="baseButton-primary"]:hover,
-        div.stButton > button[kind="primary"]:hover {
+        button[kind="primary"]:hover,
+        button[data-testid="stBaseButton-primary"]:hover,
+        .stButton > button[kind="primary"]:hover {
             background-color: #059669 !important;
             border-color: #059669 !important;
         }
 
-        /* 2. SEPARADORES (TABS) EM TOM VERDE */
-        /* Texto da tab ativa */
-        button[data-baseweb="tab"][aria-selected="true"] p {
+        /* 2. SEPARADORES (TABS) - Texto e Linha Ativa */
+        /* Selecionador de Tab Ativa */
+        div[data-baseweb="tab-list"] button[aria-selected="true"],
+        button[role="tab"][aria-selected="true"] {
+            border-bottom-color: #10b981 !important;
+        }
+
+        /* Texto dentro da Tab Ativa */
+        div[data-baseweb="tab-list"] button[aria-selected="true"] *,
+        button[role="tab"][aria-selected="true"] * {
             color: #10b981 !important;
             font-weight: 600 !important;
         }
 
-        /* Linha inferior da tab ativa */
-        div[data-baseweb="tab-highlight"] {
+        /* Linha inferior de destaque das Tabs */
+        div[data-baseweb="tab-highlight"],
+        div[data-testid="stTabs"] [data-baseweb="tab-highlight"] {
             background-color: #10b981 !important;
         }
 
-        /* Tab ao passar o rato (hover) */
-        button[data-baseweb="tab"]:hover p {
+        /* Hover nas Tabs */
+        button[role="tab"]:hover * {
             color: #34d399 !important;
+        }
+
+        /* 3. BORDAS DE FOCO E INPUTS (Remove o contorno vermelho ao clicar) */
+        div[data-baseweb="input"]:focus-within,
+        div[data-baseweb="select"]:focus-within {
+            border-color: #10b981 !important;
         }
     </style>
 """, unsafe_allow_html=True)
-)
 
 # Fluxo de navegação baseado no estado da sessão
 if 'utilizador_logado' not in st.session_state:
