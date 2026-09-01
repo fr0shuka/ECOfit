@@ -50,6 +50,7 @@ class AdminAnalyticsView:
             return
 
         # 2. Cabeçalho Executivo
+        st.title("Painel de Analítica Global")
         st.caption("Métricas de adesão, impacto das condições climatéricas e volume de atividade da plataforma.")
         st.markdown("---")
 
@@ -86,35 +87,6 @@ class AdminAnalyticsView:
         col5.metric("Temp. Média Treinos", f"{temp_media:.1f} °C")
 
         st.markdown("<br>", unsafe_allow_html=True)
-
-
-        # --- GRÁFICO DE EVOLUÇÃO ---
-        st.markdown("##### Análise de evolução diária")
-
-        campo_data = 'data_registo' if 'data_registo' in df_act.columns else 'created_at'
-        if campo_data in df_act.columns:
-            df_act[campo_data] = pd.to_datetime(df_act[campo_data])
-            df_diario = df_act.groupby(df_act[campo_data].dt.strftime('%Y-%m-%d'))['pontos_ganhos'].sum().reset_index()
-
-            fig = px.bar(
-                df_diario,
-                x=campo_data,
-                y='pontos_ganhos',
-                title="Pontuação Acumulada por Dia (Global)",
-                labels={campo_data: 'Data', 'pontos_ganhos': 'Pontos'},
-                color_discrete_sequence=[cls.VERDE_ECOFIT]
-            )
-            fig.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                margin=dict(l=20, r=20, t=40, b=20),
-                font=dict(family="Inter, sans-serif", size=12, color=cls.CINZA_TEXTO),
-                xaxis=dict(showgrid=False),
-                yaxis=dict(showgrid=True, gridcolor=cls.CINZA_GRELHA)
-            )
-
-            with st.container(border=True):
-                st.plotly_chart(fig, use_container_width=True)
 
         # SECÇÃO 2: ANÁLISE DE IMPACTO CLIMATÉRICO NOS TREINOS
         st.markdown("##### Análise de Impacto Climatérico")
