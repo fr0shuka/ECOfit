@@ -28,6 +28,12 @@ else:
         st.caption(f"Perfil: {utilizador['perfil']} | Estado: {utilizador['estado']}")
         st.markdown("---")
 
+    menu_opcao = st.sidebar.radio(
+    "Navegação",
+    ["Painel Principal", "Os Meus Treinos"],
+    index=0
+)
+        
         # Widget meteorológico
         renderizar_meteo_sidebar()
 
@@ -36,45 +42,51 @@ else:
             AuthController.logout()
             st.rerun()
 
+
+    if menu_opcao == "🏃‍♂️ Os Meus Treinos":
+    MyTrainingsView.renderizar(
+        utilizador_id=utilizador['id'], 
+        controller_atividades=controller_atividades
+    )
     # Cabeçalho Principal
     st.title("Plataforma ecoFIT")
-    
-    # Navegação por Perfil
-    if utilizador['perfil'] == 'Admin':
-        # Admin visualiza 5 abas (incluindo a Analítica Global)
-        aba_app, aba_upload, aba_user, aba_analytics, aba_admin = st.tabs([
-            "Inserir Atividade", 
-            "Sincronizar Ficheiro", 
-            "Ranking & Utilizadores", 
-            "Analítica Global",
-            "Gerir Pedidos Pendentes"
-        ])
-        
-        with aba_app:
-            DashboardView.renderizar_formulario()
-        with aba_upload:
-            UploadView.renderizar_zona_upload()
-        with aba_user:
-            UsersView.renderizar()
-        with aba_analytics:
-            AdminAnalyticsView.renderizar()
-        with aba_admin:
-            AdminView.renderizar_painel_admin()
-            
     else:
-        # Atleta visualiza 3 abas
-        aba_app, aba_upload, aba_user = st.tabs([
-            "Inserir Atividade", 
-            "Sincronizar Ficheiro", 
-            "Ranking & Utilizadores"
-        ])
-        
-        with aba_app:
-            DashboardView.renderizar_formulario()
-        with aba_upload:
-            UploadView.renderizar_zona_upload()
-        with aba_user:
-            UsersView.renderizar()  
+        # Navegação por Perfil
+        if utilizador['perfil'] == 'Admin':
+            # Admin visualiza 5 abas (incluindo a Analítica Global)
+            aba_app, aba_upload, aba_user, aba_analytics, aba_admin = st.tabs([
+                "Inserir Atividade", 
+                "Sincronizar Ficheiro", 
+                "Ranking & Utilizadores", 
+                "Analítica Global",
+                "Gerir Pedidos Pendentes"
+            ])
+            
+            with aba_app:
+                DashboardView.renderizar_formulario()
+            with aba_upload:
+                UploadView.renderizar_zona_upload()
+            with aba_user:
+                UsersView.renderizar()
+            with aba_analytics:
+                AdminAnalyticsView.renderizar()
+            with aba_admin:
+                AdminView.renderizar_painel_admin()
+                
+        else:
+            # Atleta visualiza 3 abas
+            aba_app, aba_upload, aba_user = st.tabs([
+                "Inserir Atividade", 
+                "Sincronizar Ficheiro", 
+                "Ranking & Utilizadores"
+            ])
+            
+            with aba_app:
+                DashboardView.renderizar_formulario()
+            with aba_upload:
+                UploadView.renderizar_zona_upload()
+            with aba_user:
+                UsersView.renderizar()  
 
     st.markdown("---")
 
