@@ -1,13 +1,12 @@
-import streamlit as st
 import pandas as pd
 import plotly.express as px
+import streamlit as st
+from datetime import date
+from models.activity_model import ActivityModel
+from services.weather_service import WeatherService
 
 
-class AdminAnalyticsView:
-    VERDE_ECOFIT = "#10b981"
-    CINZA_TEXTO = "#94a3b8"
-    CINZA_GRELHA = "#2e3440"
-
+class DashboardView:
     @staticmethod
     def _injetar_estilos():
         st.markdown("""
@@ -16,145 +15,136 @@ class AdminAnalyticsView:
                     padding-top: 1.5rem;
                     max-width: 1100px;
                 }
-                .admin-kpi-container {
-                    display: flex;
-                    gap: 12px;
-                    width: 100%;
-                    margin-bottom: 24px;
-                }
-                .admin-kpi-card {
-                    flex: 1;
-                    position: relative;
+                [data-testid="stMetric"] {
                     background-color: #1e222a;
                     border: 1px solid #2e3440;
-                    border-left: 3px solid #10b981;
-                    padding: 12px 14px;
-                    border-radius: 6px;
-                    cursor: help;
-                    transition: background-color 0.2s ease, border-color 0.2s ease;
+                    padding: 14px 18px;
+                    border-radius: 8px;
                 }
-                .admin-kpi-card:hover {
-                    background-color: #242933;
-                    border-color: #10b981;
-                }
-                .admin-kpi-title {
-                    font-size: 0.75rem;
-                    color: #94a3b8;
-                    font-weight: 600;
+                [data-testid="stMetricLabel"] {
+                    font-size: 0.8rem !important;
+                    color: #94a3b8 !important;
+                    font-weight: 500;
                     text-transform: uppercase;
                     letter-spacing: 0.05em;
-                    margin-bottom: 4px;
                 }
-                .admin-kpi-value {
-                    font-size: 1.3rem;
+                [data-testid="stMetricValue"] {
+                    font-size: 1.4rem !important;
                     font-weight: 700;
-                    color: #ffffff;
-                }
-                .admin-kpi-card .tooltip-text {
-                    visibility: hidden;
-                    width: 190px;
-                    background-color: #0f172a;
-                    color: #cbd5e1;
-                    text-align: center;
-                    border-radius: 6px;
-                    padding: 8px 10px;
-                    position: absolute;
-                    z-index: 99;
-                    bottom: 115%;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    opacity: 0;
-                    transition: opacity 0.2s ease-in-out, visibility 0.2s;
-                    font-size: 0.75rem;
-                    font-weight: normal;
-                    border: 1px solid #334155;
-                    box-shadow: 0px 4px 12px rgba(0,0,0,0.4);
-                    pointer-events: none;
-                }
-                .admin-kpi-card .tooltip-text::after {
-                    content: "";
-                    position: absolute;
-                    top: 100%;
-                    left: 50%;
-                    margin-left: -5px;
-                    border-width: 5px;
-                    border-style: solid;
-                    border-color: #0f172a transparent transparent transparent;
-                }
-                .admin-kpi-card:hover .tooltip-text {
-                    visibility: visible;
-                    opacity: 1;
+                    color: #ffffff !important;
                 }
             </style>
         """, unsafe_allow_html=True)
 
     @staticmethod
-    def _renderizar_card_kpi(titulo: str, valor: str, legenda: str) -> str:
-        return f"""
-        <div class="admin-kpi-card">
-            <div class="admin-kpi-title">{titulo}</div>
-            <div class="admin-kpi-value">{valor}</div>
-            <span class="tooltip-text">{legenda}</span>
-        </div>
-        """
+    def renderizar_formulario():
+        """Renderiza a zona de registo de atividade e o painel analítico completo."""
+        DashboardView._injetar_estilos()
+        temp_real = WeatherService.obter_temperatura_atual()
+        
+        # --- ZONA 1: FORMULÁRIO DE REGISTO MANUAL ---
+        st.title("Registo de Atividade")
+        st.caption("Insira os dados do treino e hábitos diários.")
+        
+        with st.form("form_atividade", clear_on_submit=True):
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                km = st.number_input("Quilómetros Corridos (km)", min_value=0.0, step=0.1)
+                
+                col_h, col_m = st.columns(2)
+                with col_h:
+                    horas = st.number_input("Horas", min_value=0, step=1, value=0)
+                with col_m:
+                    minutos_input = st.number_input("Minutos", min_value=0, max_value=59, step=1, value=0)
+            
+            with col2:
+                copos = st.number_input("Copos de Água", min_value=0, step=1)
+                fruta = st.number_input("Peças de Fruta", min_value=0, step=1)
 
-    @classmethod
-    def renderizar_view(cls, dados_atividades: list, dados_utilizadores: list):
-        cls._injetar_estilos()
+            submetido = st.form_submit_button("Salvar Atividade", type="primary", use_container_width=True)
+            
+            if submetido:
+                total_minutos = int((horas * 60) + minutos_input)
+                
+                if km == 0 and total_minutos == 0 and copos == 0 and fruta == 0:
+                    st.warning("Preencha pelo menos um dos campos para registar a atividade.")
+                else:
+                    id_utilizador = st.session_state['utilizador_logado']['utilizador_id']
+                    pontos = int((km * 10) + (total_minutos * 1) + (copos * 2) + (fruta * 5))
+                    
+                    payload = {
+                        "utilizador_id": id_utilizador,
+                        "data_registo": str(date.today()),
+                        "km_corridos": km,
+                        "minutos_treino": total_minutos,
+                        "copos_agua": copos,
+                        "pecas_fruta": fruta,
+                        "pontos_ganhos": pontos,
+                        "tipo_insercao": "Manual",
+                        "temperatura": float(temp_real),
+                        "condicao_clima": "Manual"
+                    }
+                    
+                    if ActivityModel.salvar_atividade(payload):
+                        st.toast(f"Atividade registada com sucesso (+{pontos} pts).", icon=None)
+                        st.rerun()
 
-        st.title("📊 EcoFit - Analytics Administrativo")
-        st.caption("Visão geral do envolvimento, utilizadores e volume global de hábitos.")
+        st.markdown("---")
 
-        if not dados_atividades or not dados_utilizadores:
-            st.warning("Dados insuficientes para gerar a análise global.")
+        # --- ZONA 2: PAINEL ANALÍTICO ---
+        DashboardView.renderizar_graficos_e_kpis()
+
+    @staticmethod
+    def renderizar_graficos_e_kpis():
+        """Calcula métricas com Pandas e renderiza gráficos com Plotly."""
+        st.markdown("##### Análise de Performance e Métricas")
+        
+        id_utilizador = st.session_state['utilizador_logado']['utilizador_id']
+        registos_brutos = ActivityModel.buscar_por_utilizador(id_utilizador)
+        
+        if not registos_brutos:
+            st.info("Não existem atividades registadas para este utilizador.")
             return
 
-        df_act = pd.DataFrame(dados_atividades)
-        df_usr = pd.DataFrame(dados_utilizadores)
+        df = pd.DataFrame(registos_brutos)
+        df['data_registo'] = pd.to_datetime(df['data_registo'])
+        df['km_corridos'] = pd.to_numeric(df['km_corridos'], errors='coerce').fillna(0)
+        df['minutos_treino'] = pd.to_numeric(df['minutos_treino'], errors='coerce').fillna(0)
+        df['copos_agua'] = pd.to_numeric(df['copos_agua'], errors='coerce').fillna(0)
+        df['pecas_fruta'] = pd.to_numeric(df.get('pecas_fruta', 0), errors='coerce').fillna(0)
+        df['pontos_ganhos'] = pd.to_numeric(df['pontos_ganhos'], errors='coerce').fillna(0)
+        df = df.sort_values(by='data_registo', ascending=True)
 
-        # Higienização de dados
-        df_act['pontos_ganhos'] = pd.to_numeric(df_act.get('pontos_ganhos', 0), errors='coerce').fillna(0)
-        df_act['km_corridos'] = pd.to_numeric(df_act.get('km_corridos', 0), errors='coerce').fillna(0)
-        df_act['minutos_treino'] = pd.to_numeric(df_act.get('minutos_treino', 0), errors='coerce').fillna(0)
+        # Cartões KPI Em Linha
+        col1, col2, col3, col4, col5 = st.columns(5)
+        col1.metric("Distância", f"{df['km_corridos'].sum():.1f} km")
+        col2.metric("Tempo Total", f"{int(df['minutos_treino'].sum())} min")
+        col3.metric("Hidratação", f"{int(df['copos_agua'].sum())} copos")
+        col4.metric("Fruta", f"{int(df['pecas_fruta'].sum())} peças")
+        col5.metric("Pontos Acumulados", f"{int(df['pontos_ganhos'].sum())} pts")
 
-        # Totais para KPIs
-        total_utilizadores = len(df_usr)
-        total_registos = len(df_act)
-        total_pontos = f"{int(df_act['pontos_ganhos'].sum()):,}".replace(",", " ")
-        total_km = f"{df_act['km_corridos'].sum():.1f} km"
+        st.markdown("<br>", unsafe_allow_html=True)
 
-        # Renderização dos Cartões KPI
-        html_kpis = f"""
-        <div class="admin-kpi-container">
-            {cls._renderizar_card_kpi("Utilizadores", str(total_utilizadores), "Total de utilizadores registados na plataforma.")}
-            {cls._renderizar_card_kpi("Atividades", str(total_registos), "Número total de registos de hábitos efetuados.")}
-            {cls._renderizar_card_kpi("Pontos Globais", total_pontos, "Soma de todos os pontos atribuídos na plataforma.")}
-            {cls._renderizar_card_kpi("Distância Total", total_km, "Volume total de quilómetros acumulados por todos os alunos.")}
-        </div>
-        """
-        st.markdown(html_kpis, unsafe_allow_html=True)
-
-        # Gráfico de Atividade por Dia
-        if 'data_registo' in df_act.columns:
-            df_act['data_registo'] = pd.to_datetime(df_act['data_registo'])
-            df_diario = df_act.groupby(df_act['data_registo'].dt.strftime('%Y-%m-%d'))['pontos_ganhos'].sum().reset_index()
-
-            fig = px.bar(
-                df_diario,
-                x='data_registo',
-                y='pontos_ganhos',
-                title="Pontuação Acumulada por Dia (Global)",
-                labels={'data_registo': 'Data', 'pontos_ganhos': 'Pontos Ganho'},
-                color_discrete_sequence=[cls.VERDE_ECOFIT]
-            )
-            fig.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)',
-                plot_bgcolor='rgba(0,0,0,0)',
-                margin=dict(l=20, r=20, t=40, b=20),
-                font=dict(family="Inter, sans-serif", size=12, color=cls.CINZA_TEXTO),
-                xaxis=dict(showgrid=False),
-                yaxis=dict(showgrid=True, gridcolor=cls.CINZA_GRELHA)
-            )
-
-            with st.container(border=True):
-                st.plotly_chart(fig, use_container_width=True)
+        # Gráfico Executivo com Plotly
+        df_diario = df.groupby(df['data_registo'].dt.strftime('%Y-%m-%d'))['pontos_ganhos'].sum().reset_index()
+        
+        fig_bar = px.bar(
+            df_diario,
+            x='data_registo',
+            y='pontos_ganhos',
+            title="Evolução Diária de Pontuações",
+            labels={'data_registo': 'Data', 'pontos_ganhos': 'Pontos'},
+            color_discrete_sequence=['#4da6ff']
+        )
+        fig_bar.update_layout(
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(l=20, r=20, t=40, b=20),
+            font=dict(family="Inter, sans-serif", size=12, color="#94a3b8"),
+            xaxis=dict(showgrid=False),
+            yaxis=dict(showgrid=True, gridcolor="#2e3440")
+        )
+        
+        with st.container(border=True):
+            st.plotly_chart(fig_bar, use_container_width=True)

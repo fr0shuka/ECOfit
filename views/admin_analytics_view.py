@@ -3,6 +3,7 @@ import os
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+import plotly.graph_objects as go
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from models.activity_model import ActivityModel
@@ -17,18 +18,16 @@ class AdminAnalyticsView:
                     padding-top: 1.5rem;
                     max-width: 1200px;
                 }
-                /* Cartões KPI em Tons de Cinza Executivo com Bordo Verde Accent */
                 [data-testid="stMetric"] {
                     background-color: #1e222a;
                     border: 1px solid #2e3440;
-                    border-left: 3px solid #10b981;
                     padding: 14px 18px;
-                    border-radius: 6px;
+                    border-radius: 8px;
                 }
                 [data-testid="stMetricLabel"] {
                     font-size: 0.78rem !important;
                     color: #94a3b8 !important;
-                    font-weight: 600;
+                    font-weight: 500;
                     text-transform: uppercase;
                     letter-spacing: 0.05em;
                 }
@@ -36,10 +35,6 @@ class AdminAnalyticsView:
                     font-size: 1.35rem !important;
                     font-weight: 700;
                     color: #ffffff !important;
-                }
-                /* Cor de destaque para os botões e seletores */
-                div.stButton > button:first-child {
-                    border-color: #10b981;
                 }
             </style>
         """, unsafe_allow_html=True)
@@ -59,7 +54,8 @@ class AdminAnalyticsView:
         st.caption("Métricas de adesão, impacto das condições climatéricas e volume de atividade da plataforma.")
         st.markdown("---")
 
-        # 3. Obtenção dos Dados Globais via Supabase
+        # 3. Obtenção dos Dados Globais via Model
+        # Assumindo a função que recolhe os registos de todos os utilizadores
         dados_brutos = ActivityModel.obter_metricas_globais_admin().get("dados_completos", [])
 
         if not dados_brutos:
@@ -92,19 +88,13 @@ class AdminAnalyticsView:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Paleta Executiva: Escala de Cinzas + Verde EcoFit (#10b981)
-        VERDE_ECOFIT = "#10b981"
-        VERDE_SUAVE = "#34d399"
-        CINZA_TEXTO = "#94a3b8"
-        CINZA_GRELHA = "#2e3440"
-
         # SECÇÃO 2: ANÁLISE DE IMPACTO CLIMATÉRICO NOS TREINOS
         st.markdown("##### Análise de Impacto Climatérico")
         
         col_clima1, col_clima2 = st.columns(2)
 
         with col_clima1:
-            # Scatter Plot em Cinza e Verde
+            # Gráfico de Dispersão: Temperatura vs Quilómetros Corridos
             fig_temp = px.scatter(
                 df[df['temperatura'] > 0],
                 x="temperatura",
@@ -112,20 +102,20 @@ class AdminAnalyticsView:
                 color="tipo_insercao" if "tipo_insercao" in df.columns else None,
                 title="Relação: Temperatura (°C) vs. Distância Corrida (km)",
                 labels={"temperatura": "Temperatura (°C)", "km_corridos": "Distância (km)"},
-                color_discrete_sequence=[VERDE_ECOFIT, "#64748b"]
+                color_discrete_sequence=["#4da6ff", "#00e676"]
             )
             fig_temp.update_layout(
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(family="Inter, sans-serif", size=12, color=CINZA_TEXTO),
-                xaxis=dict(showgrid=True, gridcolor=CINZA_GRELHA),
-                yaxis=dict(showgrid=True, gridcolor=CINZA_GRELHA)
+                font=dict(family="Inter, sans-serif", size=12, color="#94a3b8"),
+                xaxis=dict(showgrid=True, gridcolor="#2e3440"),
+                yaxis=dict(showgrid=True, gridcolor="#2e3440")
             )
             with st.container(border=True):
                 st.plotly_chart(fig_temp, use_container_width=True)
 
         with col_clima2:
-            # Gráfico de Barras em Tons de Cinza com Bordo/Realce Verde
+            # Agrupamento de Atividade por Condição Climatérica ou Faixa de Temperatura
             df['faixa_temp'] = pd.cut(
                 df['temperatura'], 
                 bins=[-10, 10, 20, 30, 50], 
@@ -139,14 +129,14 @@ class AdminAnalyticsView:
                 y='minutos_treino',
                 title="Média de Minutos de Treino por Faixa de Temperatura",
                 labels={'faixa_temp': 'Faixa Climatérica', 'minutos_treino': 'Média de Minutos'},
-                color_discrete_sequence=[VERDE_ECOFIT]
+                color_discrete_sequence=['#94a3b8']
             )
             fig_faixas.update_layout(
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(family="Inter, sans-serif", size=12, color=CINZA_TEXTO),
+                font=dict(family="Inter, sans-serif", size=12, color="#94a3b8"),
                 xaxis=dict(showgrid=False),
-                yaxis=dict(showgrid=True, gridcolor=CINZA_GRELHA)
+                yaxis=dict(showgrid=True, gridcolor="#2e3440")
             )
             with st.container(border=True):
                 st.plotly_chart(fig_faixas, use_container_width=True)
@@ -159,7 +149,7 @@ class AdminAnalyticsView:
         col_hab1, col_hab2 = st.columns(2)
 
         with col_hab1:
-            # Donut Chart Verde EcoFit + Gradiente de Cinzas
+            # Distribuição dos Métodos de Inserção (Manual vs Ficheiro GPX/CSV)
             if 'tipo_insercao' in df.columns:
                 df_metodo = df['tipo_insercao'].value_counts().reset_index()
                 df_metodo.columns = ['Tipo', 'Quantidade']
@@ -169,19 +159,19 @@ class AdminAnalyticsView:
                     names='Tipo',
                     values='Quantidade',
                     title="Origem dos Dados de Atividade",
-                    hole=0.45,
-                    color_discrete_sequence=[VERDE_ECOFIT, "#475569", "#94a3b8"]
+                    hole=0.4,
+                    color_discrete_sequence=['#4da6ff', "#34d399", "#f59e0b"]
                 )
                 fig_pie.update_layout(
                     paper_bgcolor='rgba(0,0,0,0)',
                     plot_bgcolor='rgba(0,0,0,0)',
-                    font=dict(family="Inter, sans-serif", size=12, color=CINZA_TEXTO)
+                    font=dict(family="Inter, sans-serif", size=12, color="#94a3b8")
                 )
                 with st.container(border=True):
                     st.plotly_chart(fig_pie, use_container_width=True)
 
         with col_hab2:
-            # Gráfico de Linha em Verde EcoFit
+            # Volume Diário Combinado de Atividades na Plataforma
             df_diario = df.groupby(df['data_registo'].dt.strftime('%Y-%m-%d'))['km_corridos'].sum().reset_index()
 
             fig_linha = px.line(
@@ -190,14 +180,14 @@ class AdminAnalyticsView:
                 y='km_corridos',
                 title="Volume Diário Global de Quilómetros Percorridos",
                 labels={'data_registo': 'Data', 'km_corridos': 'Total Km'},
-                color_discrete_sequence=[VERDE_SUAVE]
+                color_discrete_sequence=['#34d399']
             )
             fig_linha.update_layout(
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(family="Inter, sans-serif", size=12, color=CINZA_TEXTO),
+                font=dict(family="Inter, sans-serif", size=12, color="#94a3b8"),
                 xaxis=dict(showgrid=False),
-                yaxis=dict(showgrid=True, gridcolor=CINZA_GRELHA)
+                yaxis=dict(showgrid=True, gridcolor="#2e3440")
             )
             with st.container(border=True):
                 st.plotly_chart(fig_linha, use_container_width=True)

@@ -6,28 +6,7 @@ from controllers.file_controller import FileController
 
 class UploadView:
     @staticmethod
-    def _injetar_estilos():
-        st.markdown("""
-            <style>
-                div.stButton > button:first-child {
-                    background-color: #10b981 !important;
-                    color: #ffffff !important;
-                    border: none !important;
-                    font-weight: 600 !important;
-                }
-                div.stButton > button:first-child:hover {
-                    background-color: #059669 !important;
-                }
-                [data-testid="stFileUploadDropzone"] {
-                    border-color: #2e3440 !important;
-                    background-color: #1e222a !important;
-                }
-            </style>
-        """, unsafe_allow_html=True)
-
-    @staticmethod
     def renderizar_zona_upload():
-        UploadView._injetar_estilos()
         st.title("Sincronização de Ficheiro")
         st.caption("Importação de dados de atividades via CSV ou Excel.")
         
