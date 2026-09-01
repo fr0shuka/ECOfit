@@ -52,45 +52,37 @@ class AdminAnalyticsView:
 
     @classmethod
     def renderizar(cls):
-        """Carrega os dados diretamente do Supabase através dos Models e renderiza o dashboard."""
+        """Carrega os dados diretamente do Supabase através dos métodos reais do ActivityModel/UserModel."""
         cls._injetar_estilos()
 
-        st.title("📊 EcoFit - Analytics Administrativo")
+        st.markdown(f"### Olá, **{utilizador['nome']}**")
         st.caption("Visão geral do envolvimento, utilizadores e volume global de hábitos.")
 
-        # --- CARREGAMENTO DIRETO VIA SUPABASE ---
-        # Procura todos os registos nas tabelas do Supabase
-        dados_atividades = []
+        # --- CARREGAMENTO DOS DADOS VIA SUPABASE ---
+        # Chama a função exata que tens definida no ActivityModel
+        metricas_res = ActivityModel.obter_metricas_globais_admin()
+        dados_atividades = metricas_res.get("dados_completos", [])
+
+        # Procura utilizadores no UserModel
         dados_utilizadores = []
-
         try:
-            if hasattr(ActivityModel, 'buscar_todas'):
-                dados_atividades = ActivityModel.buscar_todas()
-            elif hasattr(ActivityModel, 'buscar_todos'):
-                dados_atividades = ActivityModel.buscar_todos()
-
             if hasattr(UserModel, 'buscar_todos'):
                 dados_utilizadores = UserModel.buscar_todos()
             elif hasattr(UserModel, 'listar_todos'):
                 dados_utilizadores = UserModel.listar_todos()
-        except Exception as e:
-            st.error(f"Erro ao ligar ao Supabase: {e}")
-            return
-
-        # Fallback de segurança se os registos vierem no session_state
-        if not dados_atividades:
-            dados_atividades = st.session_state.get('atividades', [])
-        if not dados_utilizadores:
-            dados_utilizadores = st.session_state.get('utilizadores', [])
+            elif hasattr(UserModel, 'obter_todos'):
+                dados_utilizadores = UserModel.obter_todos()
+        except Exception:
+            dados_utilizadores = []
 
         if not dados_atividades:
-            st.warning("Sem registos de atividades encontrados na tabela do Supabase.")
+            st.warning("Nenhum registo de atividade encontrado na tabela bd_atividades do Supabase.")
             return
 
         df_act = pd.DataFrame(dados_atividades)
         df_usr = pd.DataFrame(dados_utilizadores) if dados_utilizadores else pd.DataFrame()
 
-        # Higienização de campos numéricos do Supabase
+        # Conversão numérica defensiva
         for col in ['pontos_ganhos', 'km_corridos', 'minutos_treino']:
             if col in df_act.columns:
                 df_act[col] = pd.to_numeric(df_act[col], errors='coerce').fillna(0)
@@ -98,17 +90,23 @@ class AdminAnalyticsView:
                 df_act[col] = 0
 
         # Totais para os Cartões KPI
-        total_utilizadores = len(df_usr) if not df_usr.empty else df_act.get('utilizador_id', pd.Series()).nunique()
+        if not df_usr.empty:
+            total_utilizadores = len(df_usr)
+        elif 'utilizador_id' in df_act.columns:
+            total_utilizadores = df_act['utilizador_id'].nunique()
+        else:
+            total_utilizadores = 0
+
         total_registos = len(df_act)
         total_pontos = f"{int(df_act['pontos_ganhos'].sum()):,}".replace(",", " ")
         total_km = f"{df_act['km_corridos'].sum():.1f} km"
 
-        # --- CARTÕES KPI ---
+        # --- CARTÕES KPI (Design System EcoFit) ---
         col1, col2, col3, col4 = st.columns(4)
 
         col1.metric("Utilizadores", str(total_utilizadores), help="Total de utilizadores registados na plataforma.")
-        col2.metric("Atividades", str(total_registos), help="Número total de registos de hábitos efetuados.")
-        col3.metric("Pontos Globais", total_pontos, help="Soma de todos os pontos atribuídos no Supabase.")
+        col2.metric("Atividades", str(total_registos), help="Número total de registos de hábitos no Supabase.")
+        col3.metric("Pontos Globais", total_pontos, help="Soma total de pontos acumulados.")
         col4.metric("Distância Total", total_km, help="Volume total de quilómetros acumulados.")
 
         st.markdown("---")
