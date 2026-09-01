@@ -1,8 +1,9 @@
-# views/admin_analytics_view.py
-
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from models.activity_model import ActivityModel
+from models.user_model import UserModel
+
 
 class AdminAnalyticsView:
     VERDE_ECOFIT = "#10b981"
@@ -51,58 +52,79 @@ class AdminAnalyticsView:
 
     @classmethod
     def renderizar(cls):
-        """Ponto de entrada chamado diretamente pela aba no app.py"""
+        """Carrega os dados diretamente do Supabase através dos Models e renderiza o dashboard."""
         cls._injetar_estilos()
 
         st.title("📊 EcoFit - Analytics Administrativo")
         st.caption("Visão geral do envolvimento, utilizadores e volume global de hábitos.")
 
-        # Exemplo de obtenção dos dados (ajusta conforme a tua estrutura/models):
-        # dados_atividades = ActivityModel.buscar_todas()
-        # dados_utilizadores = UserModel.buscar_todos()
-        
-        # Ou se os dados estiverem no st.session_state / passados via lista:
-        dados_atividades = st.session_state.get('atividades', [])
-        dados_utilizadores = st.session_state.get('utilizadores', [])
+        # --- CARREGAMENTO DIRETO VIA SUPABASE ---
+        # Procura todos os registos nas tabelas do Supabase
+        dados_atividades = []
+        dados_utilizadores = []
 
-        if not dados_atividades or not dados_utilizadores:
-            st.warning("Dados insuficientes para gerar a análise global.")
+        try:
+            if hasattr(ActivityModel, 'buscar_todas'):
+                dados_atividades = ActivityModel.buscar_todas()
+            elif hasattr(ActivityModel, 'buscar_todos'):
+                dados_atividades = ActivityModel.buscar_todos()
+
+            if hasattr(UserModel, 'buscar_todos'):
+                dados_utilizadores = UserModel.buscar_todos()
+            elif hasattr(UserModel, 'listar_todos'):
+                dados_utilizadores = UserModel.listar_todos()
+        except Exception as e:
+            st.error(f"Erro ao ligar ao Supabase: {e}")
+            return
+
+        # Fallback de segurança se os registos vierem no session_state
+        if not dados_atividades:
+            dados_atividades = st.session_state.get('atividades', [])
+        if not dados_utilizadores:
+            dados_utilizadores = st.session_state.get('utilizadores', [])
+
+        if not dados_atividades:
+            st.warning("Sem registos de atividades encontrados na tabela do Supabase.")
             return
 
         df_act = pd.DataFrame(dados_atividades)
-        df_usr = pd.DataFrame(dados_utilizadores)
+        df_usr = pd.DataFrame(dados_utilizadores) if dados_utilizadores else pd.DataFrame()
 
-        # Higienização e conversão numérica
-        df_act['pontos_ganhos'] = pd.to_numeric(df_act.get('pontos_ganhos', 0), errors='coerce').fillna(0)
-        df_act['km_corridos'] = pd.to_numeric(df_act.get('km_corridos', 0), errors='coerce').fillna(0)
+        # Higienização de campos numéricos do Supabase
+        for col in ['pontos_ganhos', 'km_corridos', 'minutos_treino']:
+            if col in df_act.columns:
+                df_act[col] = pd.to_numeric(df_act[col], errors='coerce').fillna(0)
+            else:
+                df_act[col] = 0
 
-        # Métricas
-        total_utilizadores = len(df_usr)
+        # Totais para os Cartões KPI
+        total_utilizadores = len(df_usr) if not df_usr.empty else df_act.get('utilizador_id', pd.Series()).nunique()
         total_registos = len(df_act)
         total_pontos = f"{int(df_act['pontos_ganhos'].sum()):,}".replace(",", " ")
         total_km = f"{df_act['km_corridos'].sum():.1f} km"
 
-        # Cartões KPI em linha
+        # --- CARTÕES KPI ---
         col1, col2, col3, col4 = st.columns(4)
 
-        col1.metric("Utilizadores", str(total_utilizadores), help="Total de utilizadores registados.")
-        col2.metric("Atividades", str(total_registos), help="Número total de registos efetuados.")
-        col3.metric("Pontos", total_pontos, help="Soma global de pontos acumulados.")
-        col4.metric("Distância", total_km, help="Volume total de quilómetros acumulados.")
+        col1.metric("Utilizadores", str(total_utilizadores), help="Total de utilizadores registados na plataforma.")
+        col2.metric("Atividades", str(total_registos), help="Número total de registos de hábitos efetuados.")
+        col3.metric("Pontos Globais", total_pontos, help="Soma de todos os pontos atribuídos no Supabase.")
+        col4.metric("Distância Total", total_km, help="Volume total de quilómetros acumulados.")
 
         st.markdown("---")
 
-        # Gráfico
-        if 'data_registo' in df_act.columns:
-            df_act['data_registo'] = pd.to_datetime(df_act['data_registo'])
-            df_diario = df_act.groupby(df_act['data_registo'].dt.strftime('%Y-%m-%d'))['pontos_ganhos'].sum().reset_index()
+        # --- GRÁFICO DE EVOLUÇÃO ---
+        campo_data = 'data_registo' if 'data_registo' in df_act.columns else 'created_at'
+        if campo_data in df_act.columns:
+            df_act[campo_data] = pd.to_datetime(df_act[campo_data])
+            df_diario = df_act.groupby(df_act[campo_data].dt.strftime('%Y-%m-%d'))['pontos_ganhos'].sum().reset_index()
 
             fig = px.bar(
                 df_diario,
-                x='data_registo',
+                x=campo_data,
                 y='pontos_ganhos',
                 title="Pontuação Acumulada por Dia (Global)",
-                labels={'data_registo': 'Data', 'pontos_ganhos': 'Pontos'},
+                labels={campo_data: 'Data', 'pontos_ganhos': 'Pontos'},
                 color_discrete_sequence=[cls.VERDE_ECOFIT]
             )
             fig.update_layout(
