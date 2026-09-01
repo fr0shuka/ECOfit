@@ -208,6 +208,11 @@ class AdminAnalyticsView:
 
         cols_presentes = [c for c in colunas_exibir.keys() if c in df.columns]
         df_auditoria = df[cols_presentes].copy()
+
+        # Formatar a data para apenas Ano-Mês-Dia (sem horas)
+        if 'data_registo' in df_auditoria.columns:
+            df_auditoria['data_registo'] = df_auditoria['data_registo'].dt.strftime('%Y-%m-%d')
+
         df_auditoria.rename(columns=colunas_exibir, inplace=True)
 
         st.dataframe(
