@@ -1,22 +1,21 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
-from models.activity_model import ActivityModel
 
 class MyTrainingsView:
     @staticmethod
-    def renderizar(utilizador_id):
+    def renderizar(utilizador_id, activity_model):
         """
         Renderiza a vista de histórico e edição de treinos do utilizador.
         """
         st.subheader("Os Meus Treinos")
         
-        # 1. Obter atividades diretamente do ActivityModel
+        # 1. Obter atividades através do model injetado
         atividades = []
-        if hasattr(ActivityModel, 'obter_por_utilizador'):
-            atividades = ActivityModel.obter_por_utilizador(utilizador_id)
-        elif hasattr(ActivityModel, 'obter_atividades_por_utilizador'):
-            atividades = ActivityModel.obter_atividades_por_utilizador(utilizador_id)
+        if hasattr(activity_model, 'obter_por_utilizador'):
+            atividades = activity_model.obter_por_utilizador(utilizador_id)
+        elif hasattr(activity_model, 'obter_atividades_por_utilizador'):
+            atividades = activity_model.obter_atividades_por_utilizador(utilizador_id)
         
         if not atividades or len(atividades) == 0:
             st.info("Ainda não registou nenhuma atividade. Utilize a aba 'Inserir Atividade' para começar!")
@@ -80,13 +79,13 @@ class MyTrainingsView:
                     col_salvar, col_eliminar = st.columns([1, 1])
                     
                     with col_salvar:
-                        btn_salvar = st.form_submit_button("Salvar Alterações", type="primary", use_container_width=True)
+                        btn_salvar = st.form_submit_button("Salvar Alterações", type="primary", width="stretch")
                     with col_eliminar:
-                        btn_eliminar = st.form_submit_button("Eliminar Treino", use_container_width=True)
+                        btn_eliminar = st.form_submit_button("Eliminar Treino", width="stretch")
 
                     if btn_salvar:
-                        if hasattr(ActivityModel, 'atualizar_atividade'):
-                            sucesso = ActivityModel.atualizar_atividade(
+                        if hasattr(activity_model, 'atualizar_atividade'):
+                            sucesso = activity_model.atualizar_atividade(
                                 atividade_id=treino_id,
                                 novos_dados={
                                     'distancia_km': nova_distancia,
@@ -102,8 +101,8 @@ class MyTrainingsView:
                             st.warning("Função de atualização pendente no ActivityModel.")
 
                     if btn_eliminar:
-                        if hasattr(ActivityModel, 'eliminar_atividade'):
-                            sucesso = ActivityModel.eliminar_atividade(atividade_id=treino_id)
+                        if hasattr(activity_model, 'eliminar_atividade'):
+                            sucesso = activity_model.eliminar_atividade(atividade_id=treino_id)
                             if sucesso:
                                 st.warning("Treino eliminado.")
                                 st.rerun()

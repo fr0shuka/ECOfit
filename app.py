@@ -48,12 +48,13 @@ else:
     st.title("Plataforma ecoFIT")
 
     if menu_opcao == "Os Meus Treinos":
-        # Procura por 'id', 'utilizador_id' ou 'id_utilizador'
         usr_id = utilizador.get('id') or utilizador.get('utilizador_id') or utilizador.get('id_utilizador')
         
+        from models.activity_model import ActivityModel
+        
         MyTrainingsView.renderizar(
-        utilizador_id=usr_id, 
-        activity_model=ActivityModel
+            utilizador_id=usr_id, 
+            activity_model=ActivityModel
         )
         
     else:
