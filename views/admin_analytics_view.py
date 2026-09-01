@@ -111,6 +111,8 @@ class AdminAnalyticsView:
         st.markdown("---")
 
         # --- GRÁFICO DE EVOLUÇÃO ---
+        st.markdown("##### Análise de evolução diária")
+
         campo_data = 'data_registo' if 'data_registo' in df_act.columns else 'created_at'
         if campo_data in df_act.columns:
             df_act[campo_data] = pd.to_datetime(df_act[campo_data])
@@ -135,3 +137,132 @@ class AdminAnalyticsView:
 
             with st.container(border=True):
                 st.plotly_chart(fig, use_container_width=True)
+
+
+        st.markdown("##### Análise de impacto Climatérico")
+        
+        col_clima1, col_clima2 = st.columns(2)
+
+        with col_clima1:
+            # Gráfico de Dispersão: Temperatura vs Quilómetros Corridos
+            fig_temp = px.scatter(
+                df[df['temperatura'] > 0],
+                x="temperatura",
+                y="km_corridos",
+                color="tipo_insercao" if "tipo_insercao" in df.columns else None,
+                title="Relação: Temperatura (°C) vs. Distância Corrida (km)",
+                labels={"temperatura": "Temperatura (°C)", "km_corridos": "Distância (km)"},
+                color_discrete_sequence=["#4da6ff", "#00e676"]
+            )
+            fig_temp.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(family="Inter, sans-serif", size=12, color="#94a3b8"),
+                xaxis=dict(showgrid=True, gridcolor="#2e3440"),
+                yaxis=dict(showgrid=True, gridcolor="#2e3440")
+            )
+            with st.container(border=True):
+                st.plotly_chart(fig_temp, use_container_width=True)
+
+        with col_clima2:
+            # Agrupamento de Atividade por Condição Climatérica ou Faixa de Temperatura
+            df['faixa_temp'] = pd.cut(
+                df['temperatura'], 
+                bins=[-10, 10, 20, 30, 50], 
+                labels=['Frio (<10°C)', 'Agradável (10-20°C)', 'Quente (20-30°C)', 'Muito Quente (>30°C)']
+            )
+            df_temp_group = df.groupby('faixa_temp', observed=False)['minutos_treino'].mean().reset_index()
+
+            fig_faixas = px.bar(
+                df_temp_group,
+                x='faixa_temp',
+                y='minutos_treino',
+                title="Média de Minutos de Treino por Faixa de Temperatura",
+                labels={'faixa_temp': 'Faixa Climatérica', 'minutos_treino': 'Média de Minutos'},
+                color_discrete_sequence=['#94a3b8']
+            )
+            fig_faixas.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(family="Inter, sans-serif", size=12, color="#94a3b8"),
+                xaxis=dict(showgrid=False),
+                yaxis=dict(showgrid=True, gridcolor="#2e3440")
+            )
+            with st.container(border=True):
+                st.plotly_chart(fig_faixas, use_container_width=True)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # SECÇÃO 3: ADESÃO E DISTRIBUIÇÃO DA PLATAFORMA
+        st.markdown("##### Análise de utilização e hábitos")
+
+        col_hab1, col_hab2 = st.columns(2)
+
+        with col_hab1:
+            # Distribuição dos Métodos de Inserção (Manual vs Ficheiro GPX/CSV)
+            if 'tipo_insercao' in df.columns:
+                df_metodo = df['tipo_insercao'].value_counts().reset_index()
+                df_metodo.columns = ['Tipo', 'Quantidade']
+
+                fig_pie = px.pie(
+                    df_metodo,
+                    names='Tipo',
+                    values='Quantidade',
+                    title="Origem dos Dados de Atividade",
+                    hole=0.4,
+                    color_discrete_sequence=['#4da6ff', "#34d399", "#f59e0b"]
+                )
+                fig_pie.update_layout(
+                    paper_bgcolor='rgba(0,0,0,0)',
+                    plot_bgcolor='rgba(0,0,0,0)',
+                    font=dict(family="Inter, sans-serif", size=12, color="#94a3b8")
+                )
+                with st.container(border=True):
+                    st.plotly_chart(fig_pie, use_container_width=True)
+
+        with col_hab2:
+            # Volume Diário Combinado de Atividades na Plataforma
+            df_diario = df.groupby(df['data_registo'].dt.strftime('%Y-%m-%d'))['km_corridos'].sum().reset_index()
+
+            fig_linha = px.line(
+                df_diario,
+                x='data_registo',
+                y='km_corridos',
+                title="Volume Diário Global de Quilómetros Percorridos",
+                labels={'data_registo': 'Data', 'km_corridos': 'Total Km'},
+                color_discrete_sequence=['#34d399']
+            )
+            fig_linha.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(family="Inter, sans-serif", size=12, color="#94a3b8"),
+                xaxis=dict(showgrid=False),
+                yaxis=dict(showgrid=True, gridcolor="#2e3440")
+            )
+            with st.container(border=True):
+                st.plotly_chart(fig_linha, use_container_width=True)
+
+        st.markdown("---")
+
+        # SECÇÃO 4: TABELA DETALHADA PARA AUDITORIA
+        st.markdown("##### Registo Geral de atividades")
+
+        colunas_exibir = {
+            'data_registo': 'Data',
+            'utilizador_id': 'ID Utilizador',
+            'km_corridos': 'Distância (km)',
+            'minutos_treino': 'Duração (min)',
+            'temperatura': 'Temp. (°C)',
+            'tipo_insercao': 'Método',
+            'pontos_ganhos': 'Pontos'
+        }
+
+        cols_presentes = [c for c in colunas_exibir.keys() if c in df.columns]
+        df_auditoria = df[cols_presentes].copy()
+        df_auditoria.rename(columns=colunas_exibir, inplace=True)
+
+        st.dataframe(
+            df_auditoria.sort_values(by="Data", ascending=False),
+            use_container_width=True,
+            hide_index=True
+        )
