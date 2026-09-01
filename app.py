@@ -15,10 +15,12 @@ st.set_page_config(
     layout="centered"
 )
 
-# Injeção de Estilos Globais Reforçados para a EcoFit
+# Injeção de Estilos Globais para a EcoFit
 st.markdown("""
     <style>
-        /* 1. BOTÕES PRIMÁRIOS (Inserir / Submeter Atividades) */
+        /* 1. BOTÕES PRIMÁRIOS E SUBMIT DO FORMULÁRIO */
+        button[data-testid="stFormSubmitButton"] > button,
+        button[data-testid="stFormSubmitButton"] > button[kind="primary"],
         button[kind="primary"],
         button[data-testid="stBaseButton-primary"],
         .stButton > button[kind="primary"] {
@@ -28,45 +30,46 @@ st.markdown("""
             font-weight: 600 !important;
         }
 
+        button[data-testid="stFormSubmitButton"] > button:hover,
+        button[data-testid="stFormSubmitButton"] > button[kind="primary"]:hover,
         button[kind="primary"]:hover,
         button[data-testid="stBaseButton-primary"]:hover,
         .stButton > button[kind="primary"]:hover {
             background-color: #059669 !important;
             border-color: #059669 !important;
+            color: #ffffff !important;
         }
 
-        /* 2. SEPARADORES (TABS) - Texto e Linha Ativa */
-        /* Selecionador de Tab Ativa */
-        div[data-baseweb="tab-list"] button[aria-selected="true"],
-        button[role="tab"][aria-selected="true"] {
-            border-bottom-color: #10b981 !important;
-        }
-
-        /* Texto dentro da Tab Ativa */
-        div[data-baseweb="tab-list"] button[aria-selected="true"] *,
-        button[role="tab"][aria-selected="true"] * {
+        /* 2. ABAS (st.tabs) - VERDE ECOFIT */
+        /* Cor do texto na Aba Selecionada */
+        div[data-testid="stTabs"] button[aria-selected="true"],
+        div[data-testid="stTabs"] button[aria-selected="true"] p,
+        button[data-baseweb="tab"][aria-selected="true"],
+        button[data-baseweb="tab"][aria-selected="true"] p {
             color: #10b981 !important;
             font-weight: 600 !important;
         }
 
-        /* Linha inferior de destaque das Tabs */
-        div[data-baseweb="tab-highlight"],
-        div[data-testid="stTabs"] [data-baseweb="tab-highlight"] {
+        /* Linha inferior de destaque da Aba Ativa */
+        div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
+        div[data-baseweb="tab-highlight"] {
             background-color: #10b981 !important;
         }
 
-        /* Hover nas Tabs */
-        button[role="tab"]:hover * {
+        /* Cor ao passar o rato (Hover) em qualquer aba */
+        div[data-testid="stTabs"] button[aria-selected="false"]:hover,
+        div[data-testid="stTabs"] button[aria-selected="false"]:hover p {
             color: #34d399 !important;
         }
 
-        /* 3. BORDAS DE FOCO E INPUTS (Remove o contorno vermelho ao clicar) */
+        /* Border / Focus verde nos campos de entrada */
         div[data-baseweb="input"]:focus-within,
         div[data-baseweb="select"]:focus-within {
             border-color: #10b981 !important;
         }
     </style>
 """, unsafe_allow_html=True)
+
 
 # Fluxo de navegação baseado no estado da sessão
 if 'utilizador_logado' not in st.session_state:
