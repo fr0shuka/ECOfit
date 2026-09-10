@@ -67,7 +67,7 @@ class UsersView:
             'nome': 'Nome',
             'pontos': 'Pontos',
             'kms': 'Distância (km)',
-            'agua': 'Água (L)',
+            'agua': 'Água (copos)',
             'fruta': 'Fruta (doses)',
             'agua_fruta': 'Total Saúde'
         }

@@ -133,7 +133,13 @@ class DashboardView:
         df['pontos_ganhos'] = pd.to_numeric(df['pontos_ganhos'], errors='coerce').fillna(0)
         df = df.sort_values(by='data_registo', ascending=True)
 
-       # Cartões KPI Em Linha (Com Tooltips nativos e nomes otimizados)
+      # 1. Cálculo formatado do tempo (Minutos -> Horas e Minutos)
+        total_minutos = int(df['minutos_treino'].sum())
+        horas = total_minutos // 60
+        minutos_resto = total_minutos % 60
+        tempo_formatado = f"{horas}h {minutos_resto}m" if horas > 0 else f"{minutos_resto} min"
+
+        # 2. Cartões KPI em Linha
         col1, col2, col3, col4, col5 = st.columns(5)
 
         col1.metric(
@@ -144,12 +150,12 @@ class DashboardView:
 
         col2.metric(
             label="Tempo", 
-            value=f"{int(df['minutos_treino'].sum())} min",
+            value=tempo_formatado,
             help="Tempo acumulado gasto em sessões de treino."
         )
 
         col3.metric(
-            label="Hidratação", 
+            label="Água", 
             value=f"{int(df['copos_agua'].sum())} copos",
             help="Quantidade total de copos de água ingeridos."
         )
