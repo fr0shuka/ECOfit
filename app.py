@@ -60,7 +60,7 @@ else:
                 "Sincronizar Ficheiro", 
                 "Ranking & Utilizadores", 
                 "Analítica Global",
-                "Gerir Pedidos Pendentes"
+                "Menu Admin"
             ])
             
             with aba_app:
