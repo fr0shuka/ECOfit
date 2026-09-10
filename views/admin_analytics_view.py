@@ -78,7 +78,14 @@ class AdminAnalyticsView:
         temp_media = df[df['temperatura'] > 0]['temperatura'].mean() if (df['temperatura'] > 0).any() else 0
         utilizadores_ativos = df['utilizador_id'].nunique() if 'utilizador_id' in df.columns else 1
 
+        # Cálculo da string do tempo (Horas e Minutos)
+        minutos_totais = int(df['minutos_treino'].sum())
+        h = minutos_totais // 60
+        m = minutos_totais % 60
+        horas_treino_str = f"{h}h {m}m" if h > 0 else f"{m} min"
+
         col1, col2, col3, col4, col5 = st.columns(5)
+
         col1.metric(
             label="Atividades", 
             value=f"{total_atividades}",
