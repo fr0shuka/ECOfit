@@ -79,11 +79,35 @@ class AdminAnalyticsView:
         utilizadores_ativos = df['utilizador_id'].nunique() if 'utilizador_id' in df.columns else 1
 
         col1, col2, col3, col4, col5 = st.columns(5)
-        col1.metric("Total Atividades", f"{total_atividades}")
-        col2.metric("Utilizadores Ativos", f"{utilizadores_ativos}")
-        col3.metric("Volume Corrida", f"{total_kms:.1f} km")
-        col4.metric("Horas de Treino", f"{total_horas:.1f} h")
-        col5.metric("Temp. Média Treinos", f"{temp_media:.1f} °C")
+        col1.metric(
+            label="Atividades", 
+            value=f"{total_atividades}",
+            help="Número total de atividades registadas por todos os utilizadores."
+        )
+
+        col2.metric(
+            label="Ativos", 
+            value=f"{utilizadores_ativos}",
+            help="Quantidade de utilizadores com pelo menos uma atividade registada."
+        )
+
+        col3.metric(
+            label="Distância", 
+            value=f"{total_kms:.1f} km",
+            help="Volume total de quilómetros acumulados na plataforma."
+        )
+
+        col4.metric(
+            label="Tempo", 
+            value=horas_treino_str,
+            help="Total de tempo acumulado em treinos."
+        )
+
+        col5.metric(
+            label="Temp. Média", 
+            value=f"{temp_media:.1f} °C",
+            help="Temperatura média registada durante as sessões de treino."
+        )
 
         st.markdown("<br>", unsafe_allow_html=True)
 
