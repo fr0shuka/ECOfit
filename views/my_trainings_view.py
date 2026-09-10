@@ -34,15 +34,35 @@ class MyTrainingsView:
         # 3. Métricas
         total_registos = len(df_treinos)
         distancia_total = df_treinos[col_km].sum() if col_km in df_treinos.columns else 0.0
-        duracao_total = df_treinos[col_min].sum() if col_min in df_treinos.columns else 0
+        duracao_total_min = int(df_treinos[col_min].sum()) if col_min in df_treinos.columns else 0
 
+        # Conversão e Formatação do Tempo (Minutos -> Horas e Minutos)
+        h_sync = duracao_total_min // 60
+        m_sync = duracao_total_min % 60
+        tempo_total_str = f"{h_sync}h {m_sync}m" if h_sync > 0 else f"{m_sync} min"
+
+        # Cartões KPI em Linha (3 Colunas)
         col1, col2, col3 = st.columns(3)
-        with col1:
-            st.metric("Total de Atividades", f"{total_registos}")
-        with col2:
-            st.metric("Distância Acumulada", f"{distancia_total:.2f} km")
-        with col3:
-            st.metric("Tempo Total", f"{duracao_total} min")
+
+        col1.metric(
+            label="Atividades", 
+            value=f"{total_registos}",
+            help="Número total de registos de treino importados do ficheiro."
+        )
+
+        col2.metric(
+            label="Distância", 
+            value=f"{distancia_total:.2f} km",
+            help="Quilómetros acumulados presentes no ficheiro sincronizado."
+        )
+
+        col3.metric(
+            label="Tempo", 
+            value=tempo_total_str,
+            help="Tempo acumulado gasto em sessões de treino importadas."
+        )
+
+        st.markdown("<br>", unsafe_allow_html=True)
 
         st.divider()
 
