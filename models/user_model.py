@@ -20,6 +20,28 @@ class UserModel:
             return None
 
     @staticmethod
+    def obter_por_id(utilizador_id: int):
+        """Busca os dados completos de um utilizador pelo seu ID (utilizador_id ou id)."""
+        try:
+            supabase = get_supabase_client()
+            # Tenta filtrar primeiro por utilizador_id e faz fallback para id
+            resposta = supabase.table('bd_utilizadores').select('*').eq('utilizador_id', utilizador_id).execute()
+            if not resposta.data:
+                resposta = supabase.table('bd_utilizadores').select('*').eq('id', utilizador_id).execute()
+            return resposta.data[0] if resposta.data else None
+        except Exception as e:
+            print(f"Erro ao buscar utilizador por ID: {e}")
+            return None
+
+    @staticmethod
+    def obter_nome_por_id(utilizador_id: int) -> str:
+        """Devolve diretamente o nome do utilizador pelo ID para nomes de ficheiros ou relatórios."""
+        utilizador = UserModel.obter_por_id(utilizador_id)
+        if utilizador and 'nome' in utilizador:
+            return utilizador['nome']
+        return "Atleta"
+
+    @staticmethod
     def listar_todos() -> list:
         """Retorna todos os utilizadores (aprovados, pendentes, etc.) para a Gestão de Admin."""
         try:
