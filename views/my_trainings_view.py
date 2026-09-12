@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 from models.activity_model import ActivityModel
+from controllers.auth_controller import AuthController
 
 class MyTrainingsView:
     @staticmethod
@@ -134,10 +135,13 @@ class MyTrainingsView:
         # Converter o DataFrame para string CSV em UTF-8 com BOM (suporte completo para Excel)
         csv_data = df_export.to_csv(index=False, encoding='utf-8-sig')
 
+        # Obter nome do Atelta pelo ID
+        nome_atleta = auth_controller.obter_nome_por_id(utilizador_id)
+
         st.download_button(
             label="Descarregar histórico em CSV",
             data=csv_data,
-            file_name=f"historico_treinos_utilizador_{utilizador_id}.csv",
+            file_name=f"historico_treinos_utilizador_{utilizador_id}_{nome_atleta}.csv",
             mime="text/csv",
             width="stretch",
             key="btn_download_csv_trainings"
