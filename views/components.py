@@ -9,7 +9,7 @@ except ImportError:
 
 
 def renderizar_meteo_sidebar():
-    """Renderiza o widget do tempo no fundo do menu lateral como um cartão KPI."""
+    """Renderiza o widget do tempo no menu lateral dentro de um cartão com borda."""
     
     st.sidebar.markdown("---")
     st.sidebar.markdown("##### 🌡️ Meteorologia")
@@ -21,7 +21,6 @@ def renderizar_meteo_sidebar():
         except Exception:
             loc = None
 
-    # Se obteve coordenadas, passa ao serviço; caso contrário, ativa o fallback (Espinho/Gaia)
     if loc and isinstance(loc, dict) and 'coords' in loc:
         meteo = WeatherService.obter_meteo(
             lat=loc['coords']['latitude'], 
@@ -31,12 +30,14 @@ def renderizar_meteo_sidebar():
         meteo = WeatherService.obter_meteo()
 
     if meteo:
-        st.sidebar.metric(
-            label=meteo['local'], 
-            value=f"{meteo['temp']:.1f} °C", 
-            delta=f"{meteo['wind']:.1f} km/h vento",
-            delta_color="normal",
-            help=f"Condições meteorológicas obtidas em tempo real para {meteo['local']}."
-        )
+        # Envolver num container com borda força o estilo de cartão exato dos KPIs do painel
+        with st.sidebar.container(border=True):
+            st.metric(
+                label=meteo['local'], 
+                value=f"{meteo['temp']:.1f} °C", 
+                delta=f"{meteo['wind']:.1f} km/h vento",
+                delta_color="normal",
+                help=f"Condições meteorológicas obtidas em tempo real para {meteo['local']}."
+            )
     else:
         st.sidebar.caption("Sem dados do tempo de momento.")
