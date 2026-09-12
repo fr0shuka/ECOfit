@@ -69,13 +69,9 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
         </div>
         """
 
-    # Estrutura HTML/CSS fixada na base da janela (rodapé centrado a 80%)
+    # Estrutura HTML/CSS incorporada no fluxo normal da página (no fundo, centrado a 80%)
     footer_html = f"""
     <style>
-        /* Cria margem no fundo do Streamlit para o conteúdo não ser tapado pelo rodapé */
-        body {{
-            margin-bottom: 160px !important;
-        }}
         .no-scrollbar::-webkit-scrollbar {{
             display: none;
         }}
@@ -83,18 +79,14 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
             -ms-overflow-style: none;
             scrollbar-width: none;
         }}
-        .footer-news-container {{
-            position: fixed;
-            bottom: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80vw;
+        .embedded-news-container {{
+            width: 80%;
+            margin: 40px auto 20px auto; /* Margem superior para afastar do conteúdo e centrar */
             background-color: #121212;
             border: 1px solid #333;
             border-radius: 12px;
-            padding: 8px 16px;
-            z-index: 99999;
-            box-shadow: 0px 4px 15px rgba(0,0,0,0.6);
+            padding: 12px 16px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
             box-sizing: border-box;
         }}
         .nav-btn {{
@@ -117,8 +109,8 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
         }}
     </style>
 
-    <div class="footer-news-container">
-        <div style="font-size: 0.75em; color: #888; margin-bottom: 4px; font-weight: bold;">
+    <div class="embedded-news-container">
+        <div style="font-size: 0.75em; color: #888; margin-bottom: 6px; font-weight: bold;">
              Próximos Eventos Desportivos
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
