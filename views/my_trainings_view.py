@@ -137,11 +137,12 @@ class MyTrainingsView:
 
         # Obter nome do Atelta pelo ID
         nome_atleta = AuthController.obter_nome_por_id(utilizador_id)
+        nome_limpo = str(nome_atleta).lower().strip().replace(" ", "_")
 
         st.download_button(
             label="Descarregar histórico em CSV",
             data=csv_data,
-            file_name=f"historico_treinos_utilizador_{utilizador_id}_{nome_atleta}.csv",
+            file_name=f"historico_treinos_utilizador_{utilizador_id}_{nome_limpo}.csv",
             mime="text/csv",
             width="stretch",
             key="btn_download_csv_trainings"

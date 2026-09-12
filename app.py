@@ -49,7 +49,8 @@ else:
 
     if menu_opcao == "Os Meus Treinos":
         usr_id = utilizador.get('id') or utilizador.get('utilizador_id')
-        MyTrainingsView.renderizar(utilizador_id=usr_id)
+        usr_nome = utilizador.get('nome', 'Atleta')
+        MyTrainingsView.renderizar(utilizador_id=usr_id, utilizador_nome=usr_nome)
         
     else:
         # Navegação por Perfil
