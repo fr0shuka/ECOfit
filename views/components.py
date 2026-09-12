@@ -30,10 +30,25 @@ def renderizar_meteo_sidebar():
         meteo = WeatherService.obter_meteo()
 
     if meteo:
-        # Envolver num container com borda força o estilo de cartão exato dos KPIs do painel
-        with st.sidebar:
+        st.sidebar.markdown(
+            """
+            <style>
+            div[data-testid="stSidebar"] div[data-testid="stMetric"] {
+                border-left: 4px solid #FF4B4B !important;
+                padding-left: 12px !important;
+                background-color: rgba(255, 255, 255, 0.03);
+                border-radius: 4px;
+                padding-top: 8px;
+                padding-bottom: 8px;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+
+        with st.sidebar.container(border=True):
             st.metric(
-                label=meteo['local'], 
+                label=meteo['local'].upper(), 
                 value=f"{meteo['temp']:.1f} °C", 
                 delta=f"{meteo['wind']:.1f} km/h vento",
                 delta_color="normal",
