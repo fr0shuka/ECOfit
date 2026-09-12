@@ -9,9 +9,10 @@ except ImportError:
 
 
 def renderizar_meteo_sidebar():
-    """Renderiza o widget do tempo no fundo do menu lateral."""
+    """Renderiza o widget do tempo no fundo do menu lateral como um cartão KPI."""
     
-    st.sidebar.markdown("### 🌡️ Meteorologia")
+    st.sidebar.markdown("---")
+    st.sidebar.markdown("##### 🌡️ Meteorologia")
 
     loc = None
     if HAS_GEO:
@@ -20,7 +21,7 @@ def renderizar_meteo_sidebar():
         except Exception:
             loc = None
 
-    # Se conseguiu coordenadas, passa ao serviço; se não, passa None (ativa o fallback de Espinho/Gaia)
+    # Se obteve coordenadas, passa ao serviço; caso contrário, ativa o fallback (Espinho/Gaia)
     if loc and isinstance(loc, dict) and 'coords' in loc:
         meteo = WeatherService.obter_meteo(
             lat=loc['coords']['latitude'], 
@@ -31,9 +32,11 @@ def renderizar_meteo_sidebar():
 
     if meteo:
         st.sidebar.metric(
-            label=f"{meteo['local']}", 
-            value=f"{meteo['temp']} °C", 
-            delta=f"Vento: {meteo['wind']} km/h"
+            label=meteo['local'], 
+            value=f"{meteo['temp']:.1f} °C", 
+            delta=f"{meteo['wind']:.1f} km/h vento",
+            delta_color="normal",
+            help=f"Condições meteorológicas obtidas em tempo real para {meteo['local']}."
         )
     else:
         st.sidebar.caption("Sem dados do tempo de momento.")
