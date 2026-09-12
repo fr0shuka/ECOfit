@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Usar a importação a partir dos controllers/models sem importar outras views
 from controllers.admin_controller import AdminController
+from models.activity_model import ActivityModel
 from models.user_model import UserModel
 
 
@@ -57,8 +58,8 @@ class AdminAnalyticsView:
         st.markdown("---")
 
         # 3. Obtenção dos Dados Globais via Model
-        # Assumindo a função que recolhe os registos de todos os utilizadores
-        dados_brutos = ActivityModel.obter_metricas_globais_admin().get("dados_completos", [])
+        res_metricas = ActivityModel.obter_metricas_globais_admin() or {}
+        dados_brutos = res_metricas.get("dados_completos", [])
 
         if not dados_brutos:
             st.info("Não existem dados de atividades registados na plataforma para análise.")
