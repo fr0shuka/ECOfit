@@ -117,3 +117,28 @@ class MyTrainingsView:
                         if sucesso:
                             st.warning("Registo eliminado!")
                             st.rerun()
+
+
+
+    # 6. EXPORTAR HISTÓRICO DE TREINOS (CSV)
+        st.divider()
+        st.markdown("##### Exportar Histórico")
+
+        # Preparar dados para o ficheiro CSV
+        df_export = df_treinos.copy()
+        
+        # Converter colunas de data para string formatada se existirem
+        if col_data in df_export.columns and pd.api.types.is_datetime64_any_dtype(df_export[col_data]):
+            df_export[col_data] = df_export[col_data].dt.strftime('%Y-%m-%d %H:%M:%S')
+
+        # Converter o DataFrame para string CSV em UTF-8 com BOM (suporte completo para Excel)
+        csv_data = df_export.to_csv(index=False, encoding='utf-8-sig')
+
+        st.download_button(
+            label="Descarregar histórico em CSV",
+            data=csv_data,
+            file_name=f"historico_treinos_utilizador_{utilizador_id}.csv",
+            mime="text/csv",
+            width="stretch",
+            key="btn_download_csv_trainings"
+        )

@@ -36,7 +36,7 @@ class EventosDesportoService:
 
 
 def renderizar_galeria_eventos(termo_pesquisa: str):
-    """Renderiza a galeria de notícias fixada no rodapé da página."""
+    """Galeria de notícias fixada no rodapé da página."""
     eventos = EventosDesportoService.pesquisar_eventos(termo_pesquisa, limite=6)
 
     if not eventos:
