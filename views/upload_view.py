@@ -24,7 +24,7 @@ class UploadView:
             )
 
             if ficheiro is not None:
-                if st.button("Processar e Sincronizar", type="primary", use_container_width=True):
+                if st.button("Processar e Sincronizar", type="primary", width="stretch"):
                     with st.spinner("A processar dados..."):
                         sucesso = FileController.processar_ficheiro(ficheiro, utilizador_id)
 
@@ -59,6 +59,6 @@ class UploadView:
 
         st.dataframe(
             df_exibicao,
-            use_container_width=True,
+            width="stretch",
             hide_index=True
         )

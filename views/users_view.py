@@ -78,7 +78,7 @@ class UsersView:
 
         st.dataframe(
             df_exibicao.sort_values(by="Pontos", ascending=False),
-            use_container_width=True,
+            width="stretch",
             hide_index=True
         )
 

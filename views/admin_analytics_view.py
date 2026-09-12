@@ -142,7 +142,7 @@ class AdminAnalyticsView:
                 yaxis=dict(showgrid=True, gridcolor="#2e3440")
             )
             with st.container(border=True):
-                st.plotly_chart(fig_temp, use_container_width=True)
+                st.plotly_chart(fig_temp, width="stretch")
 
         with col_clima2:
             # Agrupamento de Atividade por Condição Climatérica ou Faixa de Temperatura
@@ -169,7 +169,7 @@ class AdminAnalyticsView:
                 yaxis=dict(showgrid=True, gridcolor="#2e3440")
             )
             with st.container(border=True):
-                st.plotly_chart(fig_faixas, use_container_width=True)
+                st.plotly_chart(fig_faixas, width="stretch")
 
         st.markdown("<br>", unsafe_allow_html=True)
 
@@ -198,7 +198,7 @@ class AdminAnalyticsView:
                     font=dict(family="Inter, sans-serif", size=12, color="#94a3b8")
                 )
                 with st.container(border=True):
-                    st.plotly_chart(fig_pie, use_container_width=True)
+                    st.plotly_chart(fig_pie, width="stretch")
 
         with col_hab2:
             # Volume Diário Combinado de Atividades na Plataforma
@@ -220,7 +220,7 @@ class AdminAnalyticsView:
                 yaxis=dict(showgrid=True, gridcolor="#2e3440")
             )
             with st.container(border=True):
-                st.plotly_chart(fig_linha, use_container_width=True)
+                st.plotly_chart(fig_linha, width="stretch")
 
         st.markdown("---")
 
@@ -258,7 +258,7 @@ class AdminAnalyticsView:
                     yaxis=dict(showgrid=True, gridcolor="#2e3440")
                 )
                 with st.container(border=True):
-                    st.plotly_chart(fig_utilizadores, use_container_width=True)
+                    st.plotly_chart(fig_utilizadores, width="stretch")
 
         with col_hab2:
             # 2. Adesão de Atividades (Volume Diário por Método de Inserção)
@@ -296,7 +296,7 @@ class AdminAnalyticsView:
                     yaxis=dict(showgrid=True, gridcolor="#2e3440")
                 )
                 with st.container(border=True):
-                    st.plotly_chart(fig_atividades, use_container_width=True)
+                    st.plotly_chart(fig_atividades, width="stretch")
                     
 
         st.markdown("---")
@@ -326,6 +326,6 @@ class AdminAnalyticsView:
 
         st.dataframe(
             df_auditoria.sort_values(by="Data", ascending=False),
-            use_container_width=True,
+            width="stretch",
             hide_index=True
         )

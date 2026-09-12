@@ -79,7 +79,7 @@ class DashboardView:
                 copos = st.number_input("Copos de Água", min_value=0, step=1)
                 fruta = st.number_input("Peças de Fruta", min_value=0, step=1)
 
-            submetido = st.form_submit_button("Salvar Atividade", type="primary", use_container_width=True)
+            submetido = st.form_submit_button("Salvar Atividade", type="primary", width="stretch")
             
             if submetido:
                 total_minutos = int((horas * 60) + minutos_input)
@@ -195,4 +195,4 @@ class DashboardView:
         )
         
         with st.container(border=True):
-            st.plotly_chart(fig_bar, use_container_width=True)
+            st.plotly_chart(fig_bar, width="stretch")

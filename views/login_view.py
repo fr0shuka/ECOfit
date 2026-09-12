@@ -82,7 +82,7 @@ class LoginView:
                     st.success(mensagem)
                     nome_valido = True
 
-            if st.button("Submeter Pedido de Acesso", use_container_width=True, key="btn_registo"):
+            if st.button("Submeter Pedido de Acesso", width="stretch", key="btn_registo"):
                 if nome_valido:
                     AdminController.solicitar_registo(nome_input)
                     st.rerun()
