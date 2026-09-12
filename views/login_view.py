@@ -58,11 +58,14 @@ class LoginView:
         
         with aba_login:
             st.subheader("Acesso à Plataforma")
-            nome_login = st.text_input("Nome do Atleta", placeholder="Ex: MiguelBorges", key="input_login")
             
-            if st.button("Entrar", use_container_width=True, key="btn_login"):
-                if AuthController.login(nome_login):
-                    st.rerun()
+            with st.form(key="form_login_atleta", clear_on_submit=False):
+                nome_login = st.text_input("Nome do Atleta", placeholder="Ex: MiguelBorges", key="input_login")
+                btn_login = st.form_submit_button("Entrar", type="primary", width="stretch")
+                
+                if btn_login:
+                    if AuthController.login(nome_login):
+                        st.rerun()
                     
         with aba_registo:
             st.subheader("Solicitar conta de atleta")
