@@ -69,7 +69,7 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
         </div>
         """
 
-    # Estrutura HTML/CSS fixada na base da janela (rodapé)
+    # Estrutura HTML/CSS fixada na base da janela (rodapé centrado a 80%)
     footer_html = f"""
     <style>
         /* Cria margem no fundo do Streamlit para o conteúdo não ser tapado pelo rodapé */
@@ -85,14 +85,16 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
         }}
         .footer-news-container {{
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100vw;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80vw;
             background-color: #121212;
-            border-top: 1px solid #333;
+            border: 1px solid #333;
+            border-radius: 12px;
             padding: 8px 16px;
             z-index: 99999;
-            box-shadow: 0px -4px 10px rgba(0,0,0,0.5);
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.6);
             box-sizing: border-box;
         }}
         .nav-btn {{
