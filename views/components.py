@@ -9,7 +9,7 @@ except ImportError:
 
 
 def renderizar_meteo_sidebar():
-    """Renderiza o widget do tempo no menu lateral dentro de um cartão com borda."""
+    """Card do tempo no menu lateral dentro de um cartão com borda."""
     
     st.sidebar.markdown("---")
     st.sidebar.markdown("##### 🌡️ Meteorologia")

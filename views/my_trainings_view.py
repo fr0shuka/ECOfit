@@ -4,52 +4,6 @@ from models.activity_model import ActivityModel
 
 class MyTrainingsView:
     @staticmethod
-    def _injetar_estilos():
-        st.markdown("""
-            <style>
-                .main .block-container {
-                    padding-top: 1.5rem;
-                    max-width: 1100px;
-                }
-                
-                /* Cartão do st.metric com cinza executivo e destaque lateral verde */
-                [data-testid="stMetric"] {
-                    background-color: #1e222a !important;
-                    border: 1px solid #2e3440 !important;
-                    border-left: 4px solid #FF4B4B !important; /* Verde EcoFit */
-                    padding: 12px 14px !important;
-                    border-radius: 6px !important;
-                    transition: all 0.2s ease-in-out !important;
-                }
-
-                /* Efeito Hover nos Cartões */
-                [data-testid="stMetric"]:hover {
-                    background-color: #242933 !important;
-                    border-color: #FF4B4B !important;
-                    transform: translateY(-2px);
-                }
-
-                /* Título / Rótulo da Métrica */
-                [data-testid="stMetricLabel"] {
-                    font-size: 0.75rem !important;
-                    color: #94a3b8 !important;
-                    font-weight: 600 !important;
-                    text-transform: uppercase !important;
-                    letter-spacing: 0.05em !important;
-                }
-
-                /* Valor Numérico */
-                [data-testid="stMetricValue"] {
-                    font-size: 1.3rem !important;
-                    font-weight: 700 !important;
-                    color: #ffffff !important;
-                }
-
-                
-            </style>
-        """, unsafe_allow_html=True)
-        
-    @staticmethod
     def renderizar(utilizador_id):
         """
         Renderiza a vista de histórico, tabela e edição de treinos usando o ActivityModel.

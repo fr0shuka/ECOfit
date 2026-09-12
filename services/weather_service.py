@@ -51,7 +51,7 @@ class WeatherService:
     def obter_temperatura_atual(lat: float = 41.1579, lon: float = -8.6291) -> float:
         """Procura a temperatura em tempo real. Se falhar, faz print do erro e devolve 20.0."""
         try:
-            # Exemplo com API pública Open-Meteo (ex: Porto/Norte)
+            # API pública Open-Meteo
             url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
             response = requests.get(url, timeout=3)
             data = response.json()
