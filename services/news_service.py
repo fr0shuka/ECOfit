@@ -80,7 +80,7 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
             scrollbar-width: none;
         }}
         .embedded-news-container {{
-            width: 80%;
+            width: 100%;
             margin: 40px auto 20px auto; /* Margem superior para afastar do conteúdo e centrar */
             background-color: #121212;
             border: 1px solid #333;
