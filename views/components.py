@@ -31,7 +31,7 @@ def renderizar_meteo_sidebar():
 
     if meteo:
         # Envolver num container com borda força o estilo de cartão exato dos KPIs do painel
-        with st.sidebar.container(border=True):
+        with st.sidebar:
             st.metric(
                 label=meteo['local'], 
                 value=f"{meteo['temp']:.1f} °C", 
