@@ -20,7 +20,7 @@ class UploadView:
         with st.container(border=True):
             ficheiro = st.file_uploader(
                 "Ficheiro de atividades (CSV ou XLSX)", 
-                , type=["csv", "xlsx", "xls", "json", "gpx", "fit", "txt", "xml", "tcx"]
+                type=["csv", "xlsx", "xls", "json", "gpx", "fit", "txt", "xml", "tcx"]
             )
 
             if ficheiro is not None:
