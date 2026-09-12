@@ -4,7 +4,7 @@ from models.activity_model import ActivityModel
 
 class MyTrainingsView:
     @staticmethod
-    def renderizar(utilizador_id):
+    def renderizar(utilizador_id, utilizador_nome="Atleta"):
         """
         Renderiza a vista de histórico, tabela e edição de treinos usando o ActivityModel.
         """
