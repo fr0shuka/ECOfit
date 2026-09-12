@@ -36,101 +36,102 @@ class EventosDesportoService:
 
 
     def renderizar_galeria_eventos(termo_pesquisa: str):
-        """Galeria de notícias incorporada no fundo da página."""
-        # Aumentado o limite para 12 para garantir que há conteúdo suficiente para scroll
-        eventos = EventosDesportoService.pesquisar_eventos(termo_pesquisa, limite=12)
+    """Galeria de notícias incorporada no fundo da página com scroll forçado."""
+    eventos = EventosDesportoService.pesquisar_eventos(termo_pesquisa, limite=12)
 
-        if not eventos:
-            return
+    if not eventos:
+        return
 
-        # Gera os cartões em formato compacto
-        cards_html = ""
-        for ev in eventos:
-            cards_html += f"""
-            <div style="
-                flex: 0 0 220px;
-                height: 110px;
-                background-color: #1e1e1e;
-                padding: 10px;
-                border-radius: 8px;
-                border: 1px solid #333;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                box-sizing: border-box;">
-                <div>
-                    <span style="color: #4da6ff; font-size: 0.65em; font-weight: bold; text-transform: uppercase;">{ev['fonte']}</span>
-                    <p style="color: #fff; font-size: 0.78em; font-weight: 600; line-height: 1.2; margin: 4px 0 0 0;">{ev['titulo']}</p>
-                </div>
-                <a href="{ev['link']}" target="_blank" style="
-                    color: #ff4b4b;
-                    text-decoration: none;
-                    font-weight: bold;
-                    font-size: 0.70em;">🔗 Ver Evento →</a>
+    # Gera os cartões garantindo largura fixa (flex-shrink: 0 e min-width)
+    cards_html = ""
+    for ev in eventos:
+        cards_html += f"""
+        <div style="
+            flex: 0 0 220px;
+            min-width: 220px;
+            height: 110px;
+            background-color: #1e1e1e;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-sizing: border-box;">
+            <div>
+                <span style="color: #4da6ff; font-size: 0.65em; font-weight: bold; text-transform: uppercase;">{ev['fonte']}</span>
+                <p style="color: #fff; font-size: 0.78em; font-weight: 600; line-height: 1.2; margin: 4px 0 0 0;">{ev['titulo']}</p>
             </div>
-            """
-
-        # HTML/CSS com JavaScript melhorado para o scroll
-        footer_html = f"""
-        <style>
-            .no-scrollbar::-webkit-scrollbar {{
-                display: none;
-            }}
-            .no-scrollbar {{
-                -ms-overflow-style: none;
-                scrollbar-width: none;
-            }}
-            .embedded-news-container {{
-                width: 80%;
-                margin: 40px auto 20px auto;
-                background-color: #121212;
-                border: 1px solid #333;
-                border-radius: 12px;
-                padding: 12px 16px;
-                box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
-                box-sizing: border-box;
-            }}
-            .nav-btn {{
-                background-color: #2b2b2b;
-                color: #fff;
-                border: 1px solid #444;
-                border-radius: 50%;
-                width: 32px;
-                height: 32px;
-                cursor: pointer;
+            <a href="{ev['link']}" target="_blank" style="
+                color: #ff4b4b;
+                text-decoration: none;
                 font-weight: bold;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                user-select: none;
-                flex-shrink: 0;
-            }}
-            .nav-btn:hover {{
-                background-color: #ff4b4b;
-                border-color: #ff4b4b;
-            }}
-        </style>
-
-        <div class="embedded-news-container">
-            <div style="font-size: 0.75em; color: #888; margin-bottom: 6px; font-weight: bold;">
-                Próximos Eventos Desportivos ({len(eventos)} encontrados)
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-                <button class="nav-btn" onclick="this.parentElement.querySelector('.no-scrollbar').scrollBy({{left: -250, behavior: 'smooth'}})">❮</button>
-                
-                <div class="no-scrollbar" style="
-                    display: flex;
-                    gap: 10px;
-                    overflow-x: auto;
-                    scroll-behavior: smooth;
-                    align-items: stretch;
-                    width: 100%;">
-                    {cards_html}
-                </div>
-
-                <button class="nav-btn" onclick="this.parentElement.querySelector('.no-scrollbar').scrollBy({{left: 250, behavior: 'smooth'}})">❯</button>
-            </div>
+                font-size: 0.70em;">🔗 Ver Evento →</a>
         </div>
         """
 
-        st.html(footer_html)
+    footer_html = f"""
+    <style>
+        .no-scrollbar::-webkit-scrollbar {{
+            display: none;
+        }}
+        .no-scrollbar {{
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }}
+        .embedded-news-container {{
+            width: 80%;
+            margin: 40px auto 20px auto;
+            background-color: #121212;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 12px 16px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+        }}
+        .nav-btn {{
+            background-color: #2b2b2b;
+            color: #fff;
+            border: 1px solid #444;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            flex-shrink: 0;
+        }}
+        .nav-btn:hover {{
+            background-color: #ff4b4b;
+            border-color: #ff4b4b;
+        }}
+    </style>
+
+    <div class="embedded-news-container">
+        <div style="font-size: 0.75em; color: #888; margin-bottom: 6px; font-weight: bold;">
+             Próximos Eventos Desportivos
+        </div>
+        <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+            <button class="nav-btn" onclick="this.nextElementSibling.scrollBy({{left: -250, behavior: 'smooth'}})">❮</button>
+            
+            <div class="no-scrollbar" style="
+                display: flex;
+                flex-wrap: nowrap;
+                gap: 10px;
+                overflow-x: auto;
+                scroll-behavior: smooth;
+                align-items: stretch;
+                width: 100%;
+                min-width: 0;">
+                {cards_html}
+            </div>
+
+            <button class="nav-btn" onclick="this.previousElementSibling.scrollBy({{left: 250, behavior: 'smooth'}})">❯</button>
+        </div>
+    </div>
+    """
+
+    st.html(footer_html)
