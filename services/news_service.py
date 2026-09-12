@@ -137,4 +137,4 @@ def renderizar_galeria_eventos(termo_pesquisa: str):
     </div>
     """
 
-    st.components.v1.html(footer_html, height=150, scrolling=False)
+    st.html(codigo_html)

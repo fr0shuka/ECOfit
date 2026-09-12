@@ -3,10 +3,13 @@ import os
 import streamlit as st
 import pandas as pd
 import plotly.express as px
-import plotly.graph_objects as go
 
+# Resolver caminho para a raiz
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from models.activity_model import ActivityModel
+
+# Usar a importação a partir dos controllers/models sem importar outras views
+from controllers.admin_controller import AdminController
+from models.user_model import UserModel
 
 
 class AdminAnalyticsView:

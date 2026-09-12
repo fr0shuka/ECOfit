@@ -1,8 +1,11 @@
 import sys
 import os
 
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+if ROOT_DIR not in sys.path:
+    sys.path.insert(0, ROOT_DIR)
 
+    
 import streamlit as st
 from views.login_view import LoginView
 from views.dashboard_view import DashboardView
