@@ -54,16 +54,4 @@ class AuthController:
             del st.session_state['utilizador_logado']
 
 
-    @staticmethod
-    def obter_nome_por_id(utilizador_id: int) -> str:
-        """Procura o nome do utilizador na BD através do seu ID."""
-        try:
-            # Aceder à tabela bd_utilizadores no Supabase
-            resposta = supabase.table("bd_utilizadores").select("nome").eq("id", utilizador_id).execute()
-            
-            if resposta.data and len(resposta.data) > 0:
-                return resposta.data[0].get("nome", "Atleta")
-        except Exception as e:
-            print(f"⚠️ Erro ao procurar nome do utilizador: {e}")
-            
-        return "Atleta" 
+    

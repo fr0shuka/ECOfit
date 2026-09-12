@@ -1,7 +1,6 @@
 import streamlit as st
 import pandas as pd
 from models.activity_model import ActivityModel
-from controllers.auth_controller import AuthController
 
 class MyTrainingsView:
     @staticmethod
@@ -121,26 +120,27 @@ class MyTrainingsView:
 
 
 
-    # 6. EXPORTAR HISTÓRICO DE TREINOS (CSV)
+    @staticmethod
+    def renderizar(utilizador_id, utilizador_nome="Atleta"):
+        # ... (código existente da view até à secção do download) ...
+
+        # 6. EXPORTAR HISTÓRICO DE TREINOS (CSV)
         st.divider()
-        st.markdown("##### Exportar Histórico")
+        st.markdown("##### 📥 Exportar Histórico")
 
         # Preparar dados para o ficheiro CSV
         df_export = df_treinos.copy()
         
-        # Converter colunas de data para string formatada se existirem
         if col_data in df_export.columns and pd.api.types.is_datetime64_any_dtype(df_export[col_data]):
             df_export[col_data] = df_export[col_data].dt.strftime('%Y-%m-%d %H:%M:%S')
 
-        # Converter o DataFrame para string CSV em UTF-8 com BOM (suporte completo para Excel)
         csv_data = df_export.to_csv(index=False, encoding='utf-8-sig')
 
-        # Obter nome do Atelta pelo ID
-        nome_atleta = AuthController.obter_nome_por_id(utilizador_id)
-        nome_limpo = str(nome_atleta).lower().strip().replace(" ", "_")
+        # Tratamento e formatação do nome para o ficheiro
+        nome_limpo = str(utilizador_nome).lower().strip().replace(" ", "_")
 
         st.download_button(
-            label="Descarregar histórico em CSV",
+            label="Descarregar Histórico em CSV",
             data=csv_data,
             file_name=f"historico_treinos_utilizador_{utilizador_id}_{nome_limpo}.csv",
             mime="text/csv",
