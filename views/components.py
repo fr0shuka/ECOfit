@@ -41,6 +41,31 @@ def renderizar_meteo_sidebar():
                 padding-top: 8px;
                 padding-bottom: 8px;
             }
+             /* Cartão do st.metric */
+                [data-testid="stMetric"] {
+                    background-color: #1e222a !important;
+                    border: 1px solid #2e3440 !important;
+                    border-left: 4px solid #FF4B4B !important; /* Verde EcoFit */
+                    padding: 12px 14px !important;
+                    border-radius: 6px !important;
+                    transition: all 0.2s ease-in-out !important;
+                }
+
+                /* Efeito Hover nos Cartões */
+                [data-testid="stMetric"]:hover {
+                    background-color: #242933 !important;
+                    border-color: #FF4B4B !important;
+                    transform: translateY(-2px);
+                }
+
+                /* Título / Rótulo da Métrica */
+                [data-testid="stMetricLabel"] {
+                    font-size: 0.75rem !important;
+                    color: #94a3b8 !important;
+                    font-weight: 600 !important;
+                    text-transform: uppercase !important;
+                    letter-spacing: 0.05em !important;
+                }
             </style>
             """,
             unsafe_allow_html=True

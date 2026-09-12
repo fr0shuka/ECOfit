@@ -16,7 +16,7 @@ class DashboardView:
                     max-width: 1100px;
                 }
                 
-                /* Cartão do st.metric com cinza executivo e destaque lateral verde */
+                /* Cartão do st.metric */
                 [data-testid="stMetric"] {
                     background-color: #1e222a !important;
                     border: 1px solid #2e3440 !important;
