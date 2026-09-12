@@ -30,7 +30,7 @@ class AdminController:
     @staticmethod
     def solicitar_registo(nome: str) -> bool:
         """Processa a inserção apenas se passar na validação de segurança final."""
-        # 🛡️ BARREIRA DE SEGURANÇA FINAL: Revalida o dado antes de falar com a BD
+        # Revalida o dado antes de falar com a BD
         sucesso_validacao, mensagem = AdminController.validar_nome_registo(nome)
         
         if not sucesso_validacao:
