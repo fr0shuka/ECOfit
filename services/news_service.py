@@ -35,14 +35,13 @@ class EventosDesportoService:
             return []
 
 
-    def renderizar_galeria_eventos(termo_pesquisa: str):
+def renderizar_galeria_eventos(termo_pesquisa: str):
     """Galeria de notícias incorporada no fundo da página com scroll forçado."""
     eventos = EventosDesportoService.pesquisar_eventos(termo_pesquisa, limite=12)
 
     if not eventos:
         return
 
-    # Gera os cartões garantindo largura fixa (flex-shrink: 0 e min-width)
     cards_html = ""
     for ev in eventos:
         cards_html += f"""
