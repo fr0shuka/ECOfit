@@ -66,12 +66,19 @@ def renderizar_meteo_sidebar():
                     text-transform: uppercase !important;
                     letter-spacing: 0.05em !important;
                 }
+                
+                /* Valor Numérico */
+                [data-testid="stMetricValue"] {
+                    font-size: 1.3rem !important;
+                    font-weight: 700 !important;
+                    color: #ffffff !important;
+                }
             </style>
             """,
             unsafe_allow_html=True
         )
 
-        with st.sidebar.container(border=True):
+        with st.sidebar:
             st.metric(
                 label=meteo['local'].upper(), 
                 value=f"{meteo['temp']:.1f} °C", 
