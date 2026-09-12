@@ -136,7 +136,7 @@ class MyTrainingsView:
         csv_data = df_export.to_csv(index=False, encoding='utf-8-sig')
 
         # Obter nome do Atelta pelo ID
-        nome_atleta = auth_controller.obter_nome_por_id(utilizador_id)
+        nome_atleta = AuthController.obter_nome_por_id(utilizador_id)
 
         st.download_button(
             label="Descarregar histórico em CSV",
