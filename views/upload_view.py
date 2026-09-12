@@ -8,7 +8,7 @@ class UploadView:
     @staticmethod
     def renderizar_zona_upload():
         st.markdown("Sincronização de Ficheiro")
-        st.caption("Importação de dados de atividades via CSV ou Excel.")
+        st.caption("Importação de dados de atividades via ficheiro")
         
         utilizador = st.session_state.get('utilizador_logado')
         if not utilizador:
@@ -19,7 +19,7 @@ class UploadView:
         # --- SECÇÃO 1: UPLOAD ---
         with st.container(border=True):
             ficheiro = st.file_uploader(
-                "Ficheiro de atividades (CSV ou XLSX)", 
+                "Ficheiro de atividades", 
                 type=["csv", "xlsx", "xls", "json", "gpx", "fit", "txt", "xml", "tcx"]
             )
 
