@@ -1,43 +1,81 @@
 import pandas as pd
 import time
+import json
 import xml.etree.ElementTree as ET
 import streamlit as st
 from datetime import date
 from models.activity_model import ActivityModel
 from services.weather_service import WeatherService
 
+
 class FileController:
+
     @staticmethod
-    def processar_ficheiro_treino(ficheiro_carregado) -> bool:
-        """Deteta o tipo de ficheiro (CSV, GPX, TCX) e extrai a telemetria."""
+    def processar_ficheiro(ficheiro_carregado, utilizador_id: int = None) -> bool:
+        """Deteta o tipo de ficheiro (CSV, Excel, JSON, GPX, TCX) e extrai a telemetria."""
+        if ficheiro_carregado is None:
+            return False
+
         nome_ficheiro = ficheiro_carregado.name.lower()
         km, minutos = 0.0, 0
-        
+        data_real = None
+
         try:
-            # --- CASO 1: Exportação em CSV ---
-            if nome_ficheiro.endswith('.csv'):
-                df = pd.read_csv(ficheiro_carregado)
+            # --- CASO 1: Exportação em CSV ou TXT ---
+            if nome_ficheiro.endswith(('.csv', '.txt')):
+                try:
+                    df = pd.read_csv(ficheiro_carregado)
+                except Exception:
+                    ficheiro_carregado.seek(0)
+                    df = pd.read_csv(ficheiro_carregado, sep=";")
+
                 df.columns = df.columns.str.lower()
-                
-                col_distancia = next((c for c in df.columns if 'distance' in c or 'km' in c), None)
-                col_tempo = next((c for c in df.columns if 'duration' in c or 'time' in c or 'min' in c), None)
-                
+                col_distancia = next((c for c in df.columns if 'distance' in c or 'km' in c or 'distancia' in c), None)
+                col_tempo = next((c for c in df.columns if 'duration' in c or 'time' in c or 'min' in c or 'duracao' in c), None)
+
                 if col_distancia and col_tempo:
                     km = float(df[col_distancia].sum())
                     total_tempo = df[col_tempo].sum()
                     minutos = int(total_tempo / 60) if total_tempo > 500 else int(total_tempo)
                 else:
-                    st.error("❌ CSV inválido. Não encontrámos colunas de 'distância' ou 'tempo'.")
+                    st.error("❌ CSV inválido. Não foram encontradas colunas de 'distância' ou 'tempo'.")
                     time.sleep(1.5)
                     return False
 
-            # --- CASO 2: Atividade Individual em GPX ---
+            # --- CASO 2: Excel (.xlsx, .xls) ---
+            elif nome_ficheiro.endswith(('.xlsx', '.xls')):
+                df = pd.read_excel(ficheiro_carregado)
+                df.columns = df.columns.str.lower()
+                col_distancia = next((c for c in df.columns if 'distance' in c or 'km' in c or 'distancia' in c), None)
+                col_tempo = next((c for c in df.columns if 'duration' in c or 'time' in c or 'min' in c or 'duracao' in c), None)
+
+                if col_distancia and col_tempo:
+                    km = float(df[col_distancia].sum())
+                    total_tempo = df[col_tempo].sum()
+                    minutos = int(total_tempo / 60) if total_tempo > 500 else int(total_tempo)
+                else:
+                    st.error("❌ Ficheiro Excel sem colunas identificáveis de distância e tempo.")
+                    time.sleep(1.5)
+                    return False
+
+            # --- CASO 3: Ficheiro JSON ---
+            elif nome_ficheiro.endswith('.json'):
+                dados = json.load(ficheiro_carregado)
+                df = pd.DataFrame(dados if isinstance(dados, list) else [dados])
+                df.columns = df.columns.str.lower()
+                col_distancia = next((c for c in df.columns if 'distance' in c or 'km' in c or 'distancia' in c), None)
+                col_tempo = next((c for c in df.columns if 'duration' in c or 'time' in c or 'min' in c or 'duracao' in c), None)
+
+                if col_distancia and col_tempo:
+                    km = float(df[col_distancia].sum())
+                    total_tempo = df[col_tempo].sum()
+                    minutos = int(total_tempo / 60) if total_tempo > 500 else int(total_tempo)
+
+            # --- CASO 4: Atividade Individual em GPX ---
             elif nome_ficheiro.endswith('.gpx'):
                 import gpxpy
                 from geopy.distance import geodesic
-                from datetime import datetime
 
-                # Lê o conteúdo do ficheiro enviado
                 conteudo_gpx = ficheiro_carregado.read().decode('utf-8')
                 gpx = gpxpy.parse(conteudo_gpx)
 
@@ -49,13 +87,11 @@ class FileController:
                 for track in gpx.tracks:
                     for segment in track.segments:
                         for point in segment.points:
-                            # 1. Registo de Tempos
                             if point.time:
                                 if primeiro_tempo is None:
                                     primeiro_tempo = point.time
                                 ultimo_tempo = point.time
 
-                            # 2. Cálculo da Distância (Haversine/Geodesic entre pontos)
                             if ponto_anterior is not None:
                                 coord1 = (ponto_anterior.latitude, ponto_anterior.longitude)
                                 coord2 = (point.latitude, point.longitude)
@@ -64,46 +100,37 @@ class FileController:
                             ponto_anterior = point
 
                 if primeiro_tempo and ultimo_tempo:
-                    # Tempo total da atividade em minutos
                     duracao_segundos = (ultimo_tempo - primeiro_tempo).total_seconds()
                     minutos = int(duracao_segundos / 60)
-                    
-                    # Distância acumulada em quilómetros
                     km = round(total_metros / 1000.0, 2)
-                    
-                    # Data real da atividade (YYYY-MM-DD)
-                    data_atividade = primeiro_tempo.strftime('%Y-%m-%d')
+                    data_real = primeiro_tempo.strftime('%Y-%m-%d')
                 else:
                     st.error("❌ O ficheiro GPX não contém marcas temporais válidas.")
                     time.sleep(1.5)
                     return False
 
-
-            # --- CASO 3: Atividade Individual em TCX (Garmin/Strava) ---
+            # --- CASO 5: Atividade Individual em TCX (Garmin/Strava) ---
             elif nome_ficheiro.endswith('.tcx'):
                 tree = ET.parse(ficheiro_carregado)
                 root = tree.getroot()
-                
-                # Procura todos os blocos de Lap (Volta) ignorando a versão do namespace do fabricante
+
                 laps = root.findall('.//{*}Lap')
                 total_metros = 0.0
                 total_segundos = 0.0
-                
+
                 for lap in laps:
                     dist_node = lap.find('.//{*}DistanceMeters')
                     time_node = lap.find('.//{*}TotalTimeSeconds')
-                    
+
                     if dist_node is not None and dist_node.text:
                         total_metros += float(dist_node.text)
                     if time_node is not None and time_node.text:
                         total_segundos += float(time_node.text)
-                
-                # Se encontrou dados válidos nos resumos das Laps
+
                 if total_metros > 0 or total_segundos > 0:
-                    km = round(total_metros / 1000.0, 2) # Converte metros para Km
-                    minutos = int(total_segundos / 60)   # Converte segundos para minutos
+                    km = round(total_metros / 1000.0, 2)
+                    minutos = int(total_segundos / 60)
                 else:
-                    # Fallback: se o ficheiro não tiver resumo de laps, conta os pontos brutos de Trackpoint
                     trackpoints = root.findall('.//{*}Trackpoint')
                     if trackpoints:
                         minutos = int(len(trackpoints) / 4)
@@ -115,8 +142,8 @@ class FileController:
 
             # Gravação final se houver dados extraídos com sucesso
             if km > 0 or minutos > 0:
-                return FileController._gravar_atividade_importada(km, minutos, nome_ficheiro)
-            
+                return FileController._gravar_atividade_importada(km, minutos, nome_ficheiro, data_real)
+
             st.error("Não foi possível extrair métricas válidas deste ficheiro.")
             return False
 
@@ -130,7 +157,6 @@ class FileController:
         id_utilizador = st.session_state['utilizador_logado']['utilizador_id']
         pontos = int((km * 10) + (minutos * 1))
 
-        # 🌡️ Procura a temperatura atual em tempo real para a gravação automática
         temp_atual = WeatherService.obter_temperatura_atual()
 
         payload = {
@@ -152,20 +178,18 @@ class FileController:
     def obter_historico_atividades_ficheiro(utilizador_id: int) -> pd.DataFrame:
         """Obtém as atividades carregadas e organiza-as para a vista."""
         registos = ActivityModel.obter_ficheiros_carregados(utilizador_id)
-        
+
         if not registos:
             return pd.DataFrame()
-            
+
         df = pd.DataFrame(registos)
-        
-        # Filtra apenas os registos inseridos via ficheiro, se usares essa diferenciação
+
         if 'tipo_insercao' in df.columns:
             df = df[df['tipo_insercao'].str.lower() == 'ficheiro']
 
         if df.empty:
             return pd.DataFrame()
 
-        # Formata a data de registo para exibição
         if 'data_registo' in df.columns:
             df['data_registo'] = pd.to_datetime(df['data_registo']).dt.strftime('%d/%m/%Y')
 
