@@ -49,7 +49,7 @@ class LoginView:
             </style>
         """, unsafe_allow_html=True)
 
-        # 🎯 Apresentação Centrada do Emoji (sem ficheiros externos) e Título
+        # 🎯 Apresentação Centrada do Emoji e Título
         st.markdown("<h1 style='text-align: center; font-size: 80px; margin-bottom: 0px;'>🌱</h1>", unsafe_allow_html=True)
         st.markdown("<h2 style='text-align: center; color: #99c33a; margin-top: 0px; margin-bottom: 25px;'>EcoFIT</h2>", unsafe_allow_html=True)
         
@@ -61,16 +61,20 @@ class LoginView:
             
             with st.form(key="form_login_atleta", clear_on_submit=False):
                 nome_login = st.text_input("Nome do Atleta", placeholder="Ex: MiguelBorges", key="input_login")
-                btn_login = st.form_submit_button("Entrar", type="primary", width="stretch")
+                passe_login = st.text_input("Palavra-passe", type="password", placeholder="••••••••", key="input_login_pass")
+                
+                btn_login = st.form_submit_button("Entrar", type="primary", use_container_width=True)
                 
                 if btn_login:
-                    if AuthController.login(nome_login):
+                    if AuthController.login(nome_login, passe_login):
                         st.rerun()
                     
         with aba_registo:
             st.subheader("Solicitar conta de atleta")
             st.caption("O teu acesso ficará pendente de validação por parte do Administrador.")
+            
             nome_input = st.text_input("O teu Nome", placeholder="Ex: AnaSilva", key="input_registo")
+            passe_input = st.text_input("Define a tua Palavra-passe", type="password", placeholder="Mínimo 4 carateres", key="input_registo_pass")
             
             nome_valido = False
             
@@ -82,10 +86,11 @@ class LoginView:
                     st.success(mensagem)
                     nome_valido = True
 
-            if st.button("Submeter Pedido de Acesso", width="stretch", key="btn_registo"):
-                if nome_valido:
-                    AdminController.solicitar_registo(nome_input)
-                    st.rerun()
+            if st.button("Submeter Pedido de Acesso", use_container_width=True, key="btn_registo"):
+                if not nome_valido:
+                    st.error("❌ Resolva os avisos no nome antes de avançar.")
+                elif not passe_input or len(passe_input.strip()) < 4:
+                    st.error("❌ A palavra-passe deve ter pelo menos 4 carateres.")
                 else:
-                    st.error("❌ Não é possível submeter. Resolva os avisos no nome antes de avançar.")
-                    time.sleep(1.5)
+                    if AuthController.solicitar_registo(nome_input, passe_input):
+                        st.rerun()

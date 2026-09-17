@@ -9,6 +9,22 @@ class UserModel:
     # READ 
     ############ 
     @staticmethod
+    def autenticar(nome: str, palavra_passe: str):
+        """Valida a entrada do utilizador comparando nome e palavra-passe."""
+        try:
+            supabase = get_supabase_client()
+            resposta = supabase.table('bd_utilizadores') \
+                .select('*') \
+                .eq('nome', nome.strip()) \
+                .eq('palavra_passe', palavra_passe.strip()) \
+                .execute()
+            
+            return resposta.data[0] if resposta.data else None
+        except Exception as e:
+            print(f"Erro ao autenticar utilizador: {e}")
+            return None
+
+    @staticmethod
     def buscar_por_nome(nome: str):
         """Busca um utilizador pelo nome exato."""
         try:
@@ -24,7 +40,6 @@ class UserModel:
         """Busca os dados completos de um utilizador pelo seu ID (utilizador_id ou id)."""
         try:
             supabase = get_supabase_client()
-            # Tenta filtrar primeiro por utilizador_id e faz fallback para id
             resposta = supabase.table('bd_utilizadores').select('*').eq('utilizador_id', utilizador_id).execute()
             if not resposta.data:
                 resposta = supabase.table('bd_utilizadores').select('*').eq('id', utilizador_id).execute()
@@ -35,7 +50,7 @@ class UserModel:
 
     @staticmethod
     def obter_nome_por_id(utilizador_id: int) -> str:
-        """Devolve diretamente o nome do utilizador pelo ID para nomes de ficheiros ou relatórios."""
+        """Devolve diretamente o nome do utilizador pelo ID para ficheiros ou relatórios."""
         utilizador = UserModel.obter_por_id(utilizador_id)
         if utilizador and 'nome' in utilizador:
             return utilizador['nome']
@@ -43,7 +58,7 @@ class UserModel:
 
     @staticmethod
     def listar_todos() -> list:
-        """Retorna todos os utilizadores (aprovados, pendentes, etc.) para a Gestão de Admin."""
+        """Retorna todos os utilizadores para a Gestão de Admin."""
         try:
             supabase = get_supabase_client()
             resposta = supabase.table('bd_utilizadores').select('*').order('utilizador_id', desc=False).execute()
@@ -85,12 +100,13 @@ class UserModel:
     # CREATE / UPDATE / DELETE
     ########### 
     @staticmethod
-    def criar_utilizador_pendente(nome: str) -> bool:
-        """Regista um novo atleta com estado Pendente e perfil Atleta."""
+    def criar_utilizador_pendente(nome: str, palavra_passe: str = "123456") -> bool:
+        """Regista um novo atleta com estado Pendente, perfil Atleta e palavra-passe."""
         try:
             supabase = get_supabase_client()
             payload = {
                 "nome": nome.strip(),
+                "palavra_passe": palavra_passe.strip(),
                 "estado": "Pendente",
                 "perfil": "Atleta"
             }
@@ -112,8 +128,13 @@ class UserModel:
             return False
 
     @staticmethod
+    def atualizar_estado_utilizador(utilizador_id: int, novo_estado: str) -> bool:
+        """Alias de segurança para evitar exceções de AttributeError no Controller."""
+        return UserModel.atualizar_estado(utilizador_id, novo_estado)
+
+    @staticmethod
     def atualizar_perfil(utilizador_id: int, novo_perfil: str) -> bool:
-        """Atualiza o perfil/role de um utilizador (ex: 'Atleta', 'Admin')."""
+        """Atualiza o perfil/role de um utilizador (ex: 'Atleta', 'Admin', 'Atleta Pro')."""
         try:
             supabase = get_supabase_client()
             supabase.table("bd_utilizadores").update({"perfil": novo_perfil}).eq("utilizador_id", utilizador_id).execute()
@@ -127,9 +148,7 @@ class UserModel:
         """Elimina um utilizador e remove as suas atividades associadas."""
         try:
             supabase = get_supabase_client()
-            # 1. Limpa primeiro as atividades associadas (evita erros de FK)
             supabase.table('bd_atividades').delete().eq("utilizador_id", utilizador_id).execute()
-            # 2. Elimina o utilizador
             supabase.table('bd_utilizadores').delete().eq("utilizador_id", utilizador_id).execute()
             return True
         except Exception as e:
