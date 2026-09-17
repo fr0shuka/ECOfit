@@ -64,7 +64,7 @@ else:
             st.write(f"**Plano Atual:** `{perfil_atual}`")
             
             # Opções de subscrição
-            opcoes_plano = ["Atleta Free", "Atleta Pro"]
+            opcoes_plano = ["Atleta", "Atleta Pro"]
             index_padrao = 1 if "Pro" in perfil_atual else 0
             
             novo_plano = st.selectbox(
