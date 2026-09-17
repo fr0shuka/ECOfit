@@ -66,12 +66,31 @@ class AdminView:
         if utilizador.get('tipo_id') == 4:
             return True
         info_tipo = utilizador.get('bd_tipos_utilizador') or {}
-        nome_tipo = info_tipo.get('nome') or info_tipo.get('descricao') or ''
+        nome_tipo = info_tipo.get('nome') or ''
         if str(nome_tipo).lower() == 'admin':
             return True
         if str(utilizador.get('perfil', '')).lower() == 'admin':
             return True
         return False
+
+    @staticmethod
+    def _mapear_nome_perfil(tipo_id_ou_nome) -> str:
+        """Garante que o perfil devolvido seja estritamente Atleta, Atleta Pro ou Admin."""
+        if isinstance(tipo_id_ou_nome, int):
+            if tipo_id_ou_nome == 4:
+                return "Admin"
+            elif tipo_id_ou_nome == 2:
+                return "Atleta Pro"
+            else:
+                return "Atleta"
+        
+        texto = str(tipo_id_ou_nome).lower()
+        if "admin" in texto:
+            return "Admin"
+        elif "pro" in texto:
+            return "Atleta Pro"
+        else:
+            return "Atleta"
 
     @staticmethod
     def renderizar_painel_admin():
@@ -112,10 +131,8 @@ class AdminView:
                     u_nome = p.get('nome', 'Sem Nome')
                     
                     info_tipo = p.get('bd_tipos_utilizador') or {}
-                    perfil_nome = info_tipo.get('nome') or info_tipo.get('descricao') or p.get('perfil', 'Atleta')
-                    if "free" in str(perfil_nome).lower():
-                        perfil_nome = "Atleta"
-
+                    t_id_val = p.get('tipo_id') or info_tipo.get('tipo_id')
+                    perfil_nome = AdminView._mapear_nome_perfil(info_tipo.get('nome') or t_id_val)
                     estado_nome = p.get('estado', 'Pendente')
 
                     with st.container(border=True):
@@ -164,23 +181,19 @@ class AdminView:
                 st.warning("Nenhum utilizador registado na base de dados.")
                 return
 
-            tipos_db = UserModel.obter_tipos_utilizador()
-            mapa_tipos = {}
-            for t in tipos_db:
-                nome_col = t.get('nome') or t.get('descricao') or f"Tipo {t.get('tipo_id')}"
-                if "free" in str(nome_col).lower():
-                    nome_col = "Atleta"
-                mapa_tipos[nome_col] = t.get('tipo_id')
-                
-            if not mapa_tipos:
-                mapa_tipos = {"Atleta": 1, "Atleta Pro": 2, "Admin": 4}
+            # Mapeamento fixo e limpo dos três perfis oficiais do sistema
+            mapa_tipos = {
+                "Atleta": 1,
+                "Atleta Pro": 2,
+                "Admin": 4
+            }
 
             dados_planos = []
             for u in todos_utilizadores:
                 item = dict(u)
                 info_t = item.get('bd_tipos_utilizador') or {}
-                p_nome = info_t.get('nome') or info_t.get('descricao') or item.get('perfil', 'Atleta')
-                item['Perfil'] = "Atleta" if "free" in str(p_nome).lower() else p_nome
+                t_id_val = item.get('tipo_id') or info_t.get('tipo_id', 1)
+                item['Perfil'] = AdminView._mapear_nome_perfil(info_t.get('nome') or t_id_val)
                 dados_planos.append(item)
 
             df_users = pd.DataFrame(dados_planos)
@@ -222,10 +235,8 @@ class AdminView:
                 u_id = u.get('utilizador_id')
                 u_nome = u.get('nome', 'Sem Nome')
                 info_t = u.get('bd_tipos_utilizador') or {}
-                u_perfil_nome = info_t.get('nome') or info_t.get('descricao') or u.get('perfil', 'Atleta')
-                if "free" in str(u_perfil_nome).lower():
-                    u_perfil_nome = "Atleta"
-
+                t_id_val = u.get('tipo_id') or info_t.get('tipo_id', 1)
+                u_perfil_nome = AdminView._mapear_nome_perfil(info_t.get('nome') or t_id_val)
                 u_estado = str(u.get('estado', 'Pendente')).capitalize()
 
                 with st.expander(f"ID #{u_id} — {u_nome} | Perfil: {u_perfil_nome} | Estado: {u_estado}"):
