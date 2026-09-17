@@ -24,16 +24,35 @@ st.set_page_config(
     layout="centered"
 )
 
+# Auxiliar para obter o nome do perfil relacional
+def obter_nome_perfil(u: dict) -> str:
+    if not u:
+        return "Atleta"
+    info_tipo = u.get('bd_tipos_utilizador') or {}
+    return info_tipo.get('nome', u.get('perfil', 'Atleta'))
+
+# Auxiliar para verificar permissão de Admin
+def e_administrador(u: dict) -> bool:
+    if not u:
+        return False
+    if u.get('tipo_id') == 4:
+        return True
+    nome_perfil = obter_nome_perfil(u).lower()
+    return nome_perfil == 'admin'
+
+
 # Fluxo de navegação baseado no estado da sessão
 if 'utilizador_logado' not in st.session_state:
     LoginView.renderizar_ecran()
 else:
     utilizador = st.session_state['utilizador_logado']
+    perfil_nome_exibicao = obter_nome_perfil(utilizador)
+    is_admin = e_administrador(utilizador)
     
     # Barra Lateral
     with st.sidebar:
         st.markdown(f"### Olá, **{utilizador['nome']}**")
-        st.caption(f"Perfil: {utilizador.get('perfil', 'Atleta')} | Estado: {utilizador.get('estado', 'Aprovado')}")
+        st.caption(f"Perfil: {perfil_nome_exibicao} | Estado: {utilizador.get('estado', 'Aprovado')}")
         st.markdown("---")
 
         menu_opcao = st.sidebar.radio(
@@ -60,12 +79,10 @@ else:
 
         # Expandir: Plano de Subscrição
         with st.expander("⭐ Plano de Subscrição"):
-            perfil_atual = utilizador.get('perfil', 'Atleta')
-            st.write(f"**Plano Atual:** `{perfil_atual}`")
+            st.write(f"**Plano Atual:** `{perfil_nome_exibicao}`")
             
-            # Opções de subscrição
-            opcoes_plano = ["Atleta", "Atleta Pro"]
-            index_padrao = 1 if "Pro" in perfil_atual else 0
+            opcoes_plano = ["Atleta Free", "Atleta Pro"]
+            index_padrao = 1 if "pro" in perfil_nome_exibicao.lower() else 0
             
             novo_plano = st.selectbox(
                 "Mudar de Plano:", 
@@ -75,15 +92,15 @@ else:
             )
             
             if st.button("Confirmar Alteração de Plano", use_container_width=True, key="btn_mudar_plano"):
-                if novo_plano == perfil_atual:
+                if novo_plano == perfil_nome_exibicao:
                     st.info("Já se encontra neste plano.")
                 else:
                     u_id = utilizador.get('utilizador_id') or utilizador.get('id')
-                    if AuthController.alterar_plano_subscricao(u_id, novo_plano):
+                    # Mapeia o plano para tipo_id (1 = Free, 2 = Pro ex.)
+                    tipo_id_alvo = 2 if "pro" in novo_plano.lower() else 1
+                    if AuthController.alterar_plano_subscricao(u_id, tipo_id_alvo):
                         st.rerun()
 
-        
-            
         # Widget meteorológico
         renderizar_meteo_sidebar()
 
@@ -101,7 +118,7 @@ else:
         
     else:
         # Navegação por Perfil
-        if utilizador.get('perfil') == 'Admin':
+        if is_admin:
             # Admin visualiza 5 abas (incluindo a Analítica Global)
             aba_app, aba_upload, aba_user, aba_analytics, aba_admin = st.tabs([
                 "Inserir Atividade", 
