@@ -40,23 +40,17 @@ class MyTrainingsView:
             5: "Outro"
         }
 
-        # Função inteligente para detetar se é um registo exclusivo de hábitos ou treino físico
+        # Função para detetar se é um registo exclusivo de hábitos saudáveis
         def obter_nome_atividade(row):
             km = float(row.get(col_km, 0.0) or 0.0)
             mins = int(row.get(col_min, 0) or 0)
             agua = int(row.get('copos_agua', 0) or 0)
             fruta = int(row.get('pecas_fruta', 0) or 0)
 
-            # Se não tem km nem minutos, mas tem água ou fruta, é um registo exclusivo de hábitos
-            if km == 0 and mins == 0:
-                if agua > 0 and fruta > 0:
-                    return "💧🍎 Hidratação & Fruta"
-                elif agua > 0:
-                    return "💧 Hidratação (Água)"
-                elif fruta > 0:
-                    return "🍎 Nutrição (Fruta)"
+            # Se não tem km nem minutos, mas tem água ou fruta, é Hábitos Saudáveis
+            if km == 0 and mins == 0 and (agua > 0 or fruta > 0):
+                return "Hábitos Saudáveis"
 
-            # Caso contrário, mapeia o tipo de atividade física habitual
             for c_tipo in ['tipo_atividade', 'modalidade', 'tipo_atividade_id', 'atividade_id_tipo']:
                 if c_tipo in row and pd.notnull(row[c_tipo]):
                     val = row[c_tipo]
@@ -123,7 +117,11 @@ class MyTrainingsView:
             t_fruta = int(treino.get('pecas_fruta', 0) or 0)
             t_pontos = treino.get('pontos_ganhos', 0)
 
-            titulo_expander = f"{t_data_str} — {t_tipo} ({t_km} km | {t_min} min)"
+            # Título do Expander limpo para Hábitos Saudáveis
+            if t_tipo == "Hábitos Saudáveis":
+                titulo_expander = f"{t_data_str} — Hábitos Saudáveis"
+            else:
+                titulo_expander = f"{t_data_str} — {t_tipo} ({t_km} km | {t_min} min)"
 
             with st.expander(titulo_expander, expanded=False):
                 st.caption(f"🌡️ **Temperatura:** {t_temp} °C | 💧 **Água:** {t_agua} copos | 🍎 **Fruta:** {t_fruta} peças | ⭐ **Pontos:** {t_pontos}")
