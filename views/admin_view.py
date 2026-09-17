@@ -64,12 +64,26 @@ class AdminView:
         """, unsafe_allow_html=True)
 
     @staticmethod
+    def _e_admin(utilizador: dict) -> bool:
+        """Verifica se o utilizador possui privilégios de Administrador de forma resiliente."""
+        if not utilizador:
+            return False
+        if utilizador.get('tipo_id') == 4:
+            return True
+        info_tipo = utilizador.get('bd_tipos_utilizador') or {}
+        if str(info_tipo.get('nome', '')).lower() == 'admin':
+            return True
+        if str(utilizador.get('perfil', '')).lower() == 'admin':
+            return True
+        return False
+
+    @staticmethod
     def renderizar_painel_admin():
         AdminView._injetar_estilos_profissionais()
 
         # 1. Controlo de Acesso
         utilizador = st.session_state.get('utilizador_logado')
-        if not utilizador or str(utilizador.get('perfil', '')).lower() != 'admin':
+        if not AdminView._e_admin(utilizador):
             st.error("Acesso restrito a administradores.")
             return
 
@@ -100,7 +114,9 @@ class AdminView:
                 for p in pendentes:
                     u_id = p.get('utilizador_id')
                     u_nome = p.get('nome', 'Sem Nome')
-                    perfil_nome = p.get('perfil', 'Atleta')
+                    
+                    info_tipo = p.get('bd_tipos_utilizador') or {}
+                    perfil_nome = info_tipo.get('nome', p.get('perfil', 'Atleta Free'))
                     estado_nome = p.get('estado', 'Pendente')
 
                     with st.container(border=True):
@@ -122,7 +138,7 @@ class AdminView:
                             col_aprovar, col_rejeitar = st.columns(2)
                             
                             with col_aprovar:
-                                if st.button("Aprovar", key=f"app_{u_id}", type="primary", width="stretch"):
+                                if st.button("Aprovar", key=f"app_{u_id}", type="primary", use_container_width=True):
                                     if AdminController.processar_decisao(u_id, aprovado=True):
                                         st.toast(f"Utilizador {u_nome} aprovado.")
                                         time.sleep(0.6)
@@ -131,7 +147,7 @@ class AdminView:
                                         st.error("Falha ao aprovar utilizador.")
 
                             with col_rejeitar:
-                                if st.button("Rejeitar", key=f"rej_{u_id}", width="stretch"):
+                                if st.button("Rejeitar", key=f"rej_{u_id}", use_container_width=True):
                                     if AdminController.processar_decisao(u_id, aprovado=False):
                                         st.toast(f"Pedido de {u_nome} rejeitado.")
                                         time.sleep(0.6)
@@ -143,17 +159,32 @@ class AdminView:
         # ABA 2: GESTÃO GERAL DE UTILIZADORES (ALTERAR PERFIL / ELIMINAR)
         ##########
         with tab_gestao:
-            todos_utilizadores = UserModel.listar_todos()
+            todos_utilizadores = UserModel.obter_todos_utilizadores()
 
             if not todos_utilizadores:
                 st.warning("Nenhum utilizador registado na base de dados.")
                 return
 
-            df_users = pd.DataFrame(todos_utilizadores)
+            # Carregar tipos de utilizador configurados
+            tipos_db = UserModel.obter_tipos_utilizador()
+            mapa_tipos = {t['nome']: t['tipo_id'] for t in tipos_db} if tipos_db else {"Atleta Free": 1, "Admin": 4}
+
+            # Normalizar dados para o DataFrame
+            dados_planos = []
+            for u in todos_utilizadores:
+                item = dict(u)
+                info_t = item.get('bd_tipos_utilizador') or {}
+                item['Perfil'] = info_t.get('nome', item.get('perfil', 'Atleta'))
+                dados_planos.append(item)
+
+            df_users = pd.DataFrame(dados_planos)
 
             # Métricas Gerais
             total_users = len(df_users)
-            total_admins = len(df_users[df_users['perfil'].astype(str).str.lower() == 'admin']) if 'perfil' in df_users.columns else 0
+            total_admins = len(df_users[
+                (df_users['tipo_id'] == 4) | 
+                (df_users['Perfil'].astype(str).str.lower() == 'admin')
+            ])
             total_atletas = total_users - total_admins
 
             m1, m2, m3 = st.columns(3)
@@ -172,13 +203,13 @@ class AdminView:
             cols_map = {
                 'utilizador_id': 'ID',
                 'nome': 'Nome',
-                'perfil': 'Perfil',
+                'Perfil': 'Perfil',
                 'estado': 'Estado'
             }
             df_vis = df_vis.rename(columns={k: v for k, v in cols_map.items() if k in df_vis.columns})
             exibir_cols = [c for c in ['ID', 'Nome', 'Perfil', 'Estado'] if c in df_vis.columns]
 
-            st.dataframe(df_vis[exibir_cols], width="stretch", hide_index=True)
+            st.dataframe(df_vis[exibir_cols], use_container_width=True, hide_index=True)
 
             st.markdown("---")
             st.markdown("##### Alterar Perfil ou Remover Utilizador")
@@ -186,27 +217,29 @@ class AdminView:
             for u in todos_utilizadores:
                 u_id = u.get('utilizador_id')
                 u_nome = u.get('nome', 'Sem Nome')
-                u_perfil = str(u.get('perfil', 'Atleta')).capitalize()
+                info_t = u.get('bd_tipos_utilizador') or {}
+                u_perfil_nome = info_t.get('nome', u.get('perfil', 'Atleta Free'))
                 u_estado = str(u.get('estado', 'Pendente')).capitalize()
 
-                with st.expander(f"ID #{u_id} — {u_nome} | Perfil: {u_perfil} | Estado: {u_estado}"):
+                with st.expander(f"ID #{u_id} — {u_nome} | Perfil: {u_perfil_nome} | Estado: {u_estado}"):
                     c_perfil, c_delete = st.columns([2, 1], vertical_alignment="bottom")
 
                     with c_perfil:
-                        opcoes_perfil = ["Atleta", "Admin"]
-                        idx_selecionado = opcoes_perfil.index(u_perfil) if u_perfil in opcoes_perfil else 0
+                        opcoes_nomes = list(mapa_tipos.keys())
+                        idx_selecionado = opcoes_nomes.index(u_perfil_nome) if u_perfil_nome in opcoes_nomes else 0
                         
-                        novo_perfil = st.selectbox(
+                        novo_perfil_nome = st.selectbox(
                             "Perfil de Acesso:",
-                            opcoes_perfil,
+                            opcoes_nomes,
                             index=idx_selecionado,
                             key=f"sel_perfil_{u_id}"
                         )
 
                         if st.button("Guardar Perfil", key=f"btn_save_perfil_{u_id}", type="primary"):
-                            if novo_perfil != u_perfil:
-                                if UserModel.atualizar_perfil(u_id, novo_perfil):
-                                    st.toast(f"Perfil de {u_nome} alterado para {novo_perfil}!")
+                            novo_tipo_id = mapa_tipos[novo_perfil_nome]
+                            if novo_tipo_id != u.get('tipo_id'):
+                                if AdminController.alterar_perfil_utilizador(u_id, novo_tipo_id):
+                                    st.toast(f"Perfil de {u_nome} alterado para {novo_perfil_nome}!")
                                     time.sleep(0.6)
                                     st.rerun()
                                 else:
@@ -215,7 +248,7 @@ class AdminView:
                                 st.info("O perfil selecionado é igual ao atual.")
 
                     with c_delete:
-                        if st.button("🗑️ Eliminar Utilizador", key=f"btn_del_usr_{u_id}", width="stretch"):
+                        if st.button("🗑️ Eliminar Utilizador", key=f"btn_del_usr_{u_id}", use_container_width=True):
                             if UserModel.eliminar_utilizador(u_id):
                                 st.toast(f"Utilizador {u_nome} eliminado com sucesso.")
                                 time.sleep(0.6)
