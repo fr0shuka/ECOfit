@@ -55,11 +55,6 @@ class AdminView:
                     letter-spacing: 0.05em;
                     text-transform: uppercase;
                 }
-
-                .text-secondary {
-                    color: #94a3b8;
-                    font-size: 0.875rem;
-                }
             </style>
         """, unsafe_allow_html=True)
 
@@ -71,7 +66,8 @@ class AdminView:
         if utilizador.get('tipo_id') == 4:
             return True
         info_tipo = utilizador.get('bd_tipos_utilizador') or {}
-        if str(info_tipo.get('nome', '')).lower() == 'admin':
+        nome_tipo = info_tipo.get('nome') or info_tipo.get('descricao') or ''
+        if str(nome_tipo).lower() == 'admin':
             return True
         if str(utilizador.get('perfil', '')).lower() == 'admin':
             return True
@@ -116,7 +112,7 @@ class AdminView:
                     u_nome = p.get('nome', 'Sem Nome')
                     
                     info_tipo = p.get('bd_tipos_utilizador') or {}
-                    perfil_nome = info_tipo.get('nome', p.get('perfil', 'Atleta Free'))
+                    perfil_nome = info_tipo.get('nome') or info_tipo.get('descricao') or p.get('perfil', 'Atleta Free')
                     estado_nome = p.get('estado', 'Pendente')
 
                     with st.container(border=True):
@@ -138,7 +134,7 @@ class AdminView:
                             col_aprovar, col_rejeitar = st.columns(2)
                             
                             with col_aprovar:
-                                if st.button("Aprovar", key=f"app_{u_id}", type="primary", use_container_width=True):
+                                if st.button("Aprovar", key=f"app_{u_id}", type="primary", width="stretch"):
                                     if AdminController.processar_decisao(u_id, aprovado=True):
                                         st.toast(f"Utilizador {u_nome} aprovado.")
                                         time.sleep(0.6)
@@ -147,7 +143,7 @@ class AdminView:
                                         st.error("Falha ao aprovar utilizador.")
 
                             with col_rejeitar:
-                                if st.button("Rejeitar", key=f"rej_{u_id}", use_container_width=True):
+                                if st.button("Rejeitar", key=f"rej_{u_id}", width="stretch"):
                                     if AdminController.processar_decisao(u_id, aprovado=False):
                                         st.toast(f"Pedido de {u_nome} rejeitado.")
                                         time.sleep(0.6)
@@ -156,7 +152,7 @@ class AdminView:
                                         st.error("Falha ao rejeitar utilizador.")
 
         ##########
-        # ABA 2: GESTÃO GERAL DE UTILIZADORES (ALTERAR PERFIL / ELIMINAR)
+        # ABA 2: GESTÃO GERAL DE UTILIZADORES
         ##########
         with tab_gestao:
             todos_utilizadores = UserModel.obter_todos_utilizadores()
@@ -165,16 +161,22 @@ class AdminView:
                 st.warning("Nenhum utilizador registado na base de dados.")
                 return
 
-            # Carregar tipos de utilizador configurados
+            # Carregar tipos de utilizador configurados na BD de forma segura
             tipos_db = UserModel.obter_tipos_utilizador()
-            mapa_tipos = {t['nome']: t['tipo_id'] for t in tipos_db} if tipos_db else {"Atleta Free": 1, "Admin": 4}
+            mapa_tipos = {}
+            for t in tipos_db:
+                nome_col = t.get('nome') or t.get('descricao') or f"Tipo {t.get('tipo_id')}"
+                mapa_tipos[nome_col] = t.get('tipo_id')
+                
+            if not mapa_tipos:
+                mapa_tipos = {"Atleta Free": 1, "Atleta Pro": 2, "Admin": 4}
 
             # Normalizar dados para o DataFrame
             dados_planos = []
             for u in todos_utilizadores:
                 item = dict(u)
                 info_t = item.get('bd_tipos_utilizador') or {}
-                item['Perfil'] = info_t.get('nome', item.get('perfil', 'Atleta'))
+                item['Perfil'] = info_t.get('nome') or info_t.get('descricao') or item.get('perfil', 'Atleta')
                 dados_planos.append(item)
 
             df_users = pd.DataFrame(dados_planos)
@@ -198,7 +200,6 @@ class AdminView:
             st.markdown("---")
             st.markdown("##### Tabela Geral de Atletas e Admins")
 
-            # Tratamento da Tabela de Exibição
             df_vis = df_users.copy()
             cols_map = {
                 'utilizador_id': 'ID',
@@ -209,7 +210,7 @@ class AdminView:
             df_vis = df_vis.rename(columns={k: v for k, v in cols_map.items() if k in df_vis.columns})
             exibir_cols = [c for c in ['ID', 'Nome', 'Perfil', 'Estado'] if c in df_vis.columns]
 
-            st.dataframe(df_vis[exibir_cols], use_container_width=True, hide_index=True)
+            st.dataframe(df_vis[exibir_cols], width="stretch", hide_index=True)
 
             st.markdown("---")
             st.markdown("##### Alterar Perfil ou Remover Utilizador")
@@ -218,7 +219,7 @@ class AdminView:
                 u_id = u.get('utilizador_id')
                 u_nome = u.get('nome', 'Sem Nome')
                 info_t = u.get('bd_tipos_utilizador') or {}
-                u_perfil_nome = info_t.get('nome', u.get('perfil', 'Atleta Free'))
+                u_perfil_nome = info_t.get('nome') or info_t.get('descricao') or u.get('perfil', 'Atleta Free')
                 u_estado = str(u.get('estado', 'Pendente')).capitalize()
 
                 with st.expander(f"ID #{u_id} — {u_nome} | Perfil: {u_perfil_nome} | Estado: {u_estado}"):
@@ -248,7 +249,7 @@ class AdminView:
                                 st.info("O perfil selecionado é igual ao atual.")
 
                     with c_delete:
-                        if st.button("🗑️ Eliminar Utilizador", key=f"btn_del_usr_{u_id}", use_container_width=True):
+                        if st.button("🗑️ Eliminar Utilizador", key=f"btn_del_usr_{u_id}", width="stretch"):
                             if UserModel.eliminar_utilizador(u_id):
                                 st.toast(f"Utilizador {u_nome} eliminado com sucesso.")
                                 time.sleep(0.6)
