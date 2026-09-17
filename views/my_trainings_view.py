@@ -91,7 +91,7 @@ class MyTrainingsView:
 
         st.divider()
 
-        # 5. Edição e Eliminação Individual
+       # 5. Edição e Eliminação Individual
         st.markdown("##### Gerir / Editar Registos")
         for _, treino in df_treinos.iterrows():
             t_id = treino.get(col_id)
@@ -99,7 +99,10 @@ class MyTrainingsView:
             t_data = t_data_val.strftime('%d/%m/%Y %H:%M') if pd.notnull(t_data_val) else str(treino.get('data_registo', ''))
             t_tipo = treino.get(col_tipo, 'Treino')
             t_km = float(treino.get(col_km, 0.0))
-            t_min = int(treino.get(col_min, 0))
+            
+            # Garante que a duração mínima respeita o limite do widget (evita 0 se min_value=1)
+            t_min_raw = treino.get(col_min, 1)
+            t_min = int(t_min_raw) if pd.notnull(t_min_raw) and int(t_min_raw) > 0 else 1
 
             with st.expander(f"{t_data} — Atividade #{t_id} ({t_km} km | {t_min} min)", expanded=False):
                 with st.form(key=f"form_edit_{t_id}"):
