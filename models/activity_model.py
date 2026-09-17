@@ -6,6 +6,18 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from config.database import get_supabase_client
 
 class ActivityModel:
+
+    @staticmethod
+    def obter_tipos_atividade() -> list:
+        """Procura todas as modalidades/tipos de atividade configurados em bd_tipos_atividade."""
+        try:
+            supabase = get_supabase_client()
+            resposta = supabase.table('bd_tipos_atividade').select('*').execute()
+            return resposta.data or []
+        except Exception as e:
+            st.error(f"Erro ao carregar tipos de atividade do Supabase: {e}")
+            return []
+
     @staticmethod
     def salvar_atividade(dados_atividade: dict) -> bool:
         """Insere um novo registo de treino na tabela bd_atividades do Supabase."""
@@ -41,10 +53,17 @@ class ActivityModel:
 
     @staticmethod
     def buscar_por_utilizador(utilizador_id: int) -> list:
-        """Recupera todas as atividades registadas para um utilizador específico no Supabase."""
+        """
+        Recupera todas as atividades de um utilizador específico,
+        incluindo os dados da modalidade via JOIN relacional.
+        """
         try:
             supabase = get_supabase_client()
-            resposta = supabase.table('bd_atividades').select('*').eq('utilizador_id', utilizador_id).execute()
+            resposta = supabase.table('bd_atividades') \
+                .select('*, bd_tipos_atividade(nome, fator_pontuacao)') \
+                .eq('utilizador_id', utilizador_id) \
+                .order('data_registo', desc=True) \
+                .execute()
             return resposta.data or []
         except Exception as e:
             st.error(f"Erro ao procurar atividades no Supabase: {e}")
@@ -52,13 +71,11 @@ class ActivityModel:
 
     @staticmethod
     def obter_ficheiros_carregados(utilizador_id: int) -> list:
-        """Procura os registos de atividades originados por ficheiro."""
+        """Procura os registos de atividades originados por ficheiro/upload."""
         try:
             supabase = get_supabase_client()
-            
-            # Procura na bd_atividades apenas os registos onde tipo_insercao é 'ficheiro' ou 'upload'
             resposta = supabase.table("bd_atividades") \
-                .select("data_registo, km_corridos, minutos_treino, pontos_ganhos, tipo_insercao") \
+                .select("data_registo, distancia_km, minutos_treino, pontos_ganhos, tipo_insercao, bd_tipos_atividade(nome)") \
                 .eq("utilizador_id", utilizador_id) \
                 .order("data_registo", desc=True) \
                 .execute()
@@ -68,13 +85,14 @@ class ActivityModel:
             print(f"❌ Erro ao procurar histórico de atividades/ficheiros: {e}")
             return []
 
-
     @staticmethod
     def obter_metricas_globais_admin() -> dict:
-        """Recupera todas as atividades registadas na tabela bd_atividades do Supabase para o painel de administração."""
+        """Recupera todas as atividades no Supabase para o painel de administração."""
         try:
             supabase = get_supabase_client()
-            resposta = supabase.table('bd_atividades').select('*').execute()
+            resposta = supabase.table('bd_atividades') \
+                .select('*, bd_tipos_atividade(nome, fator_pontuacao)') \
+                .execute()
             
             dados = resposta.data or []
             return {"dados_completos": dados}
