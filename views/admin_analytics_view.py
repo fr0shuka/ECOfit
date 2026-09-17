@@ -7,7 +7,6 @@ import plotly.express as px
 # Resolver caminho para a raiz
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Usar a importação a partir dos controllers/models sem importar outras views
 from controllers.admin_controller import AdminController
 from models.activity_model import ActivityModel
 from models.user_model import UserModel
@@ -44,12 +43,27 @@ class AdminAnalyticsView:
         """, unsafe_allow_html=True)
 
     @staticmethod
+    def _e_admin(utilizador: dict) -> bool:
+        """Verifica se o utilizador tem permissões de administrador de forma resiliente."""
+        if not utilizador:
+            return False
+        if utilizador.get('tipo_id') == 4:
+            return True
+        info_tipo = utilizador.get('bd_tipos_utilizador') or {}
+        nome_tipo = info_tipo.get('nome') or info_tipo.get('descricao') or ''
+        if str(nome_tipo).lower() == 'admin':
+            return True
+        if str(utilizador.get('perfil', '')).lower() == 'admin':
+            return True
+        return False
+
+    @staticmethod
     def renderizar():
         AdminAnalyticsView._injetar_estilos()
 
-        # 1. Controlo de Acesso
+        # 1. Controlo de Acesso Resiliente
         utilizador = st.session_state.get('utilizador_logado')
-        if not utilizador or utilizador.get('perfil') != 'Admin':
+        if not AdminAnalyticsView._e_admin(utilizador):
             st.error("Acesso restrito a administradores.")
             return
 
@@ -67,8 +81,16 @@ class AdminAnalyticsView:
 
         # 4. Tratamento dos Dados com Pandas
         df = pd.DataFrame(dados_brutos)
+        
+        # Compatibilidade de colunas (distancia_km vs km_corridos)
+        if 'distancia_km' in df.columns:
+            df['distancia_km'] = pd.to_numeric(df['distancia_km'], errors='coerce').fillna(0)
+        elif 'km_corridos' in df.columns:
+            df['distancia_km'] = pd.to_numeric(df['km_corridos'], errors='coerce').fillna(0)
+        else:
+            df['distancia_km'] = 0.0
+
         df['data_registo'] = pd.to_datetime(df['data_registo'])
-        df['km_corridos'] = pd.to_numeric(df.get('km_corridos', 0), errors='coerce').fillna(0)
         df['minutos_treino'] = pd.to_numeric(df.get('minutos_treino', 0), errors='coerce').fillna(0)
         df['temperatura'] = pd.to_numeric(df.get('temperatura', 0), errors='coerce').fillna(0)
         df['copos_agua'] = pd.to_numeric(df.get('copos_agua', 0), errors='coerce').fillna(0)
@@ -77,12 +99,12 @@ class AdminAnalyticsView:
 
         # SECÇÃO 1: METRICAS GLOBAIS DE PLATAFORMA (KPIs)
         total_atividades = len(df)
-        total_kms = df['km_corridos'].sum()
+        total_kms = df['distancia_km'].sum()
         total_horas = df['minutos_treino'].sum() / 60
         temp_media = df[df['temperatura'] > 0]['temperatura'].mean() if (df['temperatura'] > 0).any() else 0
         utilizadores_ativos = df['utilizador_id'].nunique() if 'utilizador_id' in df.columns else 1
 
-        # Cálculo da string do tempo (Horas e Minutos)
+        # Cálculo da string do tempo
         minutos_totais = int(df['minutos_treino'].sum())
         h = minutos_totais // 60
         m = minutos_totais % 60
@@ -128,14 +150,13 @@ class AdminAnalyticsView:
         col_clima1, col_clima2 = st.columns(2)
 
         with col_clima1:
-            # Gráfico de Dispersão: Temperatura vs Quilómetros Corridos
             fig_temp = px.scatter(
                 df[df['temperatura'] > 0],
                 x="temperatura",
-                y="km_corridos",
+                y="distancia_km",
                 color="tipo_insercao" if "tipo_insercao" in df.columns else None,
                 title="Relação: Temperatura (°C) vs. Distância Corrida (km)",
-                labels={"temperatura": "Temperatura (°C)", "km_corridos": "Distância (km)"},
+                labels={"temperatura": "Temperatura (°C)", "distancia_km": "Distância (km)"},
                 color_discrete_sequence=["#4da6ff", "#00e676"]
             )
             fig_temp.update_layout(
@@ -149,7 +170,6 @@ class AdminAnalyticsView:
                 st.plotly_chart(fig_temp, width="stretch")
 
         with col_clima2:
-            # Agrupamento de Atividade por Condição Climatérica ou Faixa de Temperatura
             df['faixa_temp'] = pd.cut(
                 df['temperatura'], 
                 bins=[-10, 10, 20, 30, 50], 
@@ -183,7 +203,6 @@ class AdminAnalyticsView:
         col_hab1, col_hab2 = st.columns(2)
 
         with col_hab1:
-            # Distribuição dos Métodos de Inserção (Manual vs Ficheiro GPX/CSV)
             if 'tipo_insercao' in df.columns:
                 df_metodo = df['tipo_insercao'].value_counts().reset_index()
                 df_metodo.columns = ['Tipo', 'Quantidade']
@@ -205,15 +224,14 @@ class AdminAnalyticsView:
                     st.plotly_chart(fig_pie, width="stretch")
 
         with col_hab2:
-            # Volume Diário Combinado de Atividades na Plataforma
-            df_diario = df.groupby(df['data_registo'].dt.strftime('%Y-%m-%d'))['km_corridos'].sum().reset_index()
+            df_diario = df.groupby(df['data_registo'].dt.strftime('%Y-%m-%d'))['distancia_km'].sum().reset_index()
 
             fig_linha = px.line(
                 df_diario,
                 x='data_registo',
-                y='km_corridos',
+                y='distancia_km',
                 title="Volume Diário Global de Quilómetros Percorridos",
-                labels={'data_registo': 'Data', 'km_corridos': 'Total Km'},
+                labels={'data_registo': 'Data', 'distancia_km': 'Total Km'},
                 color_discrete_sequence=['#34d399']
             )
             fig_linha.update_layout(
@@ -234,13 +252,10 @@ class AdminAnalyticsView:
         col_hab1, col_hab2 = st.columns(2)
 
         with col_hab1:
-            # 1. Adesão de Utilizadores (Crescimento Acumulado de Utilizadores Ativos)
             if 'utilizador_id' in df.columns and 'data_registo' in df.columns:
-                # Identifica a primeira atividade de cada utilizador
                 primeiro_registo = df.groupby('utilizador_id')['data_registo'].min().reset_index()
                 primeiro_registo['data_dia'] = primeiro_registo['data_registo'].dt.strftime('%Y-%m-%d')
                 
-                # Conta novos utilizadores por dia e calcula o acumulado
                 novos_usrs = primeiro_registo.groupby('data_dia').size().reset_index(name='novos')
                 novos_usrs = novos_usrs.sort_values('data_dia')
                 novos_usrs['total_acumulado'] = novos_usrs['novos'].cumsum()
@@ -265,7 +280,6 @@ class AdminAnalyticsView:
                     st.plotly_chart(fig_utilizadores, width="stretch")
 
         with col_hab2:
-            # 2. Adesão de Atividades (Volume Diário por Método de Inserção)
             if 'data_registo' in df.columns:
                 df['data_dia'] = df['data_registo'].dt.strftime('%Y-%m-%d')
                 col_tipo = 'tipo_insercao' if 'tipo_insercao' in df.columns else None
@@ -301,10 +315,8 @@ class AdminAnalyticsView:
                 )
                 with st.container(border=True):
                     st.plotly_chart(fig_atividades, width="stretch")
-                    
 
         st.markdown("---")
-
 
         # SECÇÃO 4: TABELA DETALHADA PARA AUDITORIA
         st.markdown("##### Registo Geral de Atividades")
@@ -312,7 +324,7 @@ class AdminAnalyticsView:
         colunas_exibir = {
             'data_registo': 'Data',
             'utilizador_id': 'ID Utilizador',
-            'km_corridos': 'Distância (km)',
+            'distancia_km': 'Distância (km)',
             'minutos_treino': 'Duração (min)',
             'temperatura': 'Temp. (°C)',
             'tipo_insercao': 'Método',
@@ -322,7 +334,6 @@ class AdminAnalyticsView:
         cols_presentes = [c for c in colunas_exibir.keys() if c in df.columns]
         df_auditoria = df[cols_presentes].copy()
 
-        # Formatar a data para apenas Ano-Mês-Dia (sem horas)
         if 'data_registo' in df_auditoria.columns:
             df_auditoria['data_registo'] = df_auditoria['data_registo'].dt.strftime('%Y-%m-%d')
 

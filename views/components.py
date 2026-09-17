@@ -9,7 +9,7 @@ except ImportError:
 
 
 def renderizar_meteo_sidebar():
-    """Card do tempo no menu lateral dentro de um cartão com borda."""
+    """Renderiza o widget meteorológico no menu lateral dentro de um cartão estilizado."""
     
     st.sidebar.markdown("---")
     st.sidebar.markdown("##### 🌡️ Meteorologia")
@@ -21,45 +21,37 @@ def renderizar_meteo_sidebar():
         except Exception:
             loc = None
 
-    if loc and isinstance(loc, dict) and 'coords' in loc:
-        meteo = WeatherService.obter_meteo(
-            lat=loc['coords']['latitude'], 
-            lon=loc['coords']['longitude']
-        )
-    else:
-        meteo = WeatherService.obter_meteo()
+    try:
+        if loc and isinstance(loc, dict) and 'coords' in loc:
+            meteo = WeatherService.obter_meteo(
+                lat=loc['coords']['latitude'], 
+                lon=loc['coords']['longitude']
+            )
+        else:
+            meteo = WeatherService.obter_meteo()
+    except Exception as e:
+        meteo = None
 
-    if meteo:
+    if meteo and isinstance(meteo, dict) and 'temp' in meteo:
         st.sidebar.markdown(
             """
             <style>
-            div[data-testid="stSidebar"] div[data-testid="stMetric"] {
-                border-left: 4px solid #FF4B4B !important;
-                padding-left: 12px !important;
-                background-color: rgba(255, 255, 255, 0.03);
-                border-radius: 4px;
-                padding-top: 8px;
-                padding-bottom: 8px;
-            }
-             /* Cartão do st.metric */
-                [data-testid="stMetric"] {
+                div[data-testid="stSidebar"] [data-testid="stMetric"] {
                     background-color: #1e222a !important;
                     border: 1px solid #2e3440 !important;
-                    border-left: 4px solid #FF4B4B !important; /* Verde EcoFit */
+                    border-left: 4px solid #FF4B4B !important;
                     padding: 12px 14px !important;
                     border-radius: 6px !important;
                     transition: all 0.2s ease-in-out !important;
                 }
 
-                /* Efeito Hover nos Cartões */
-                [data-testid="stMetric"]:hover {
+                div[data-testid="stSidebar"] [data-testid="stMetric"]:hover {
                     background-color: #242933 !important;
                     border-color: #FF4B4B !important;
                     transform: translateY(-2px);
                 }
 
-                /* Título / Rótulo da Métrica */
-                [data-testid="stMetricLabel"] {
+                div[data-testid="stSidebar"] [data-testid="stMetricLabel"] {
                     font-size: 0.75rem !important;
                     color: #94a3b8 !important;
                     font-weight: 600 !important;
@@ -67,8 +59,7 @@ def renderizar_meteo_sidebar():
                     letter-spacing: 0.05em !important;
                 }
                 
-                /* Valor Numérico */
-                [data-testid="stMetricValue"] {
+                div[data-testid="stSidebar"] [data-testid="stMetricValue"] {
                     font-size: 1.3rem !important;
                     font-weight: 700 !important;
                     color: #ffffff !important;
@@ -79,12 +70,16 @@ def renderizar_meteo_sidebar():
         )
 
         with st.sidebar:
+            local_nome = str(meteo.get('local', 'Localidade')).upper()
+            temp_val = float(meteo.get('temp', 0.0))
+            wind_val = float(meteo.get('wind', 0.0))
+
             st.metric(
-                label=meteo['local'].upper(), 
-                value=f"{meteo['temp']:.1f} °C", 
-                delta=f"{meteo['wind']:.1f} km/h vento",
+                label=local_nome, 
+                value=f"{temp_val:.1f} °C", 
+                delta=f"{wind_val:.1f} km/h vento",
                 delta_color="normal",
-                help=f"Condições meteorológicas obtidas em tempo real para {meteo['local']}."
+                help=f"Condições meteorológicas obtidas em tempo real para {local_nome}."
             )
     else:
-        st.sidebar.caption("Sem dados do tempo de momento.")
+        st.sidebar.caption("Sem dados meteorológicos de momento.")

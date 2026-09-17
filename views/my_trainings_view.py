@@ -17,18 +17,27 @@ class MyTrainingsView:
             st.info("Ainda não registou nenhuma atividade. Utilize a aba 'Inserir Atividade' para começar!")
             return
 
-        # 2. DataFrame e Mapeamento de Colunas da tua bd_atividades
+        # 2. DataFrame e Mapeamento de Colunas
         df_treinos = pd.DataFrame(atividades)
 
         col_id = 'atividade_id' if 'atividade_id' in df_treinos.columns else 'id'
-        col_data = 'data_registo' if 'data_registo' in df_treinos.columns else 'data'
-        col_km = 'km_corridos' if 'km_corridos' in df_treinos.columns else 'distancia_km'
+        col_data = 'data_registo' if 'data_registo' in df_treinos.columns else ('data' if 'data' in df_treinos.columns else 'created_at')
+        
+        # Suporte para a nova nomenclatura 3NF (distancia_km com fallback para km_corridos)
+        if 'distancia_km' in df_treinos.columns:
+            col_km = 'distancia_km'
+        elif 'km_corridos' in df_treinos.columns:
+            col_km = 'km_corridos'
+        else:
+            df_treinos['distancia_km'] = 0.0
+            col_km = 'distancia_km'
+
         col_min = 'minutos_treino' if 'minutos_treino' in df_treinos.columns else ('minutos' if 'minutos' in df_treinos.columns else 'duracao_min')
-        col_tipo = 'modalidade' if 'modalidade' in df_treinos.columns else 'tipo_atividade'
+        col_tipo = 'modalidade' if 'modalidade' in df_treinos.columns else ('tipo_atividade' if 'tipo_atividade' in df_treinos.columns else 'tipo_atividade_id')
 
         # Ordenar por data mais recente
         if col_data in df_treinos.columns:
-            df_treinos[col_data] = pd.to_datetime(df_treinos[col_data])
+            df_treinos[col_data] = pd.to_datetime(df_treinos[col_data], errors='coerce')
             df_treinos = df_treinos.sort_values(by=col_data, ascending=False)
 
         # 3. Métricas
@@ -47,23 +56,22 @@ class MyTrainingsView:
         col1.metric(
             label="Atividades", 
             value=f"{total_registos}",
-            help="Número total de registos de treino importados do ficheiro."
+            help="Número total de registos de treino efetuados."
         )
 
         col2.metric(
             label="Distância", 
             value=f"{distancia_total:.2f} km",
-            help="Quilómetros acumulados presentes no ficheiro sincronizado."
+            help="Quilómetros acumulados nas sessões de treino."
         )
 
         col3.metric(
             label="Tempo", 
             value=tempo_total_str,
-            help="Tempo acumulado gasto em sessões de treino importadas."
+            help="Tempo acumulado gasto em sessões de treino."
         )
 
         st.markdown("<br>", unsafe_allow_html=True)
-
         st.divider()
 
         # 4. Tabela de Apresentação
@@ -87,18 +95,19 @@ class MyTrainingsView:
         st.markdown("##### Gerir / Editar Registos")
         for _, treino in df_treinos.iterrows():
             t_id = treino.get(col_id)
-            t_data = treino[col_data].strftime('%d/%m/%Y %H:%M') if isinstance(treino[col_data], pd.Timestamp) else str(treino.get(col_data, ''))
+            t_data_val = treino.get(col_data)
+            t_data = t_data_val.strftime('%d/%m/%Y %H:%M') if pd.notnull(t_data_val) else str(treino.get('data_registo', ''))
             t_tipo = treino.get(col_tipo, 'Treino')
-            t_km = treino.get(col_km, 0.0)
-            t_min = treino.get(col_min, 0)
+            t_km = float(treino.get(col_km, 0.0))
+            t_min = int(treino.get(col_min, 0))
 
-            with st.expander(f"{t_data} — {t_tipo} ({t_km} km | {t_min} min)", expanded=False):
+            with st.expander(f"{t_data} — Atividade #{t_id} ({t_km} km | {t_min} min)", expanded=False):
                 with st.form(key=f"form_edit_{t_id}"):
                     c1, c2 = st.columns(2)
                     with c1:
-                        novo_km = st.number_input("Distância (km)", min_value=0.0, max_value=500.0, value=float(t_km), step=0.1, key=f"km_{t_id}")
+                        novo_km = st.number_input("Distância (km)", min_value=0.0, max_value=500.0, value=t_km, step=0.1, key=f"km_{t_id}")
                     with c2:
-                        novo_min = st.number_input("Duração (min)", min_value=1, max_value=1440, value=int(t_min), step=1, key=f"min_{t_id}")
+                        novo_min = st.number_input("Duração (min)", min_value=1, max_value=1440, value=t_min, step=1, key=f"min_{t_id}")
 
                     c_salvar, c_eliminar = st.columns([1, 1])
                     with c_salvar:
@@ -118,34 +127,23 @@ class MyTrainingsView:
                             st.warning("Registo eliminado!")
                             st.rerun()
 
-
-
         #######
         # EXPORTAR HISTÓRICO DE TREINOS (CSV)
         #######
         st.divider()
         st.markdown("##### 📥 Exportar Histórico")
 
-        # 1. Identificar o DataFrame disponível (procura as variáveis mais comuns na view)
-        df_para_exportar = None
-        for nome_var in ['df_treinos', 'df', 'df_user', 'df_historico']:
-            if nome_var in locals() and locals()[nome_var] is not None:
-                df_para_exportar = locals()[nome_var]
-                break
+        df_para_exportar = df_treinos
 
-        # 2. Validar se existem dados para exportar
         if df_para_exportar is not None and not df_para_exportar.empty:
             df_export = df_para_exportar.copy()
             
-            # Formatação de datas caso a coluna exista
-            col_data = 'data_treino' if 'data_treino' in df_export.columns else 'data'
             if col_data in df_export.columns and pd.api.types.is_datetime64_any_dtype(df_export[col_data]):
                 df_export[col_data] = df_export[col_data].dt.strftime('%Y-%m-%d %H:%M:%S')
 
             csv_data = df_export.to_csv(index=False, encoding='utf-8-sig')
             nome_limpo = str(utilizador_nome).lower().strip().replace(" ", "_")
 
-            # Botão ajustado com width="stretch" para eliminar avisos
             st.download_button(
                 label="Descarregar Histórico em CSV",
                 data=csv_data,

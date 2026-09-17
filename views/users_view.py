@@ -10,7 +10,7 @@ from controllers.user_controller import UserController
 class UsersView:
     @staticmethod
     def renderizar():
-        st.title("Classificação geral")
+        st.title("Classificação Geral")
         st.caption("Desempenho acumulado da comunidade EcoFit.")
 
         df_users = UserController.obter_dados_ranking()
@@ -19,8 +19,19 @@ class UsersView:
             st.info("Não existem dados de utilizadores para apresentar.")
             return
 
+        # Normalização de colunas de hábitos e métricas
+        for col in ['agua', 'fruta', 'pontos', 'kms', 'minutos']:
+            if col not in df_users.columns:
+                df_users[col] = 0
+            else:
+                df_users[col] = pd.to_numeric(df_users[col], errors='coerce').fillna(0)
+
         if 'agua' in df_users.columns and 'fruta' in df_users.columns:
             df_users['agua_fruta'] = df_users['agua'] + df_users['fruta']
+
+        # Normalização do nome do perfil relacional se existir
+        if 'perfil_nome' not in df_users.columns:
+            df_users['perfil_nome'] = df_users.get('perfil', 'Atleta')
 
         # --- SECÇÃO TOP 5 ---
         st.markdown("##### Líderes por Categoria")
@@ -65,6 +76,7 @@ class UsersView:
 
         colunas_exibir = {
             'nome': 'Nome',
+            'perfil_nome': 'Perfil',
             'pontos': 'Pontos',
             'kms': 'Distância (km)',
             'agua': 'Água (copos)',
@@ -94,6 +106,7 @@ class UsersView:
                 with col_pos:
                     st.markdown(f"**#{idx}**")
                 with col_nome:
-                    st.markdown(f"**{row['nome']}**")
+                    p_nome = row.get('perfil_nome', 'Atleta')
+                    st.markdown(f"**{row['nome']}**  \n<span style='color: #94a3b8; font-size: 0.75rem;'>{p_nome}</span>", unsafe_allow_html=True)
                 with col_val:
                     st.markdown(f"`{row[coluna_valor]}` {sufixo}")
