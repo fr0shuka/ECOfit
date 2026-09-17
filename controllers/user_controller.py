@@ -15,12 +15,12 @@ class UserController:
         if not users_data:
             return pd.DataFrame()
             
-        # Achatar estrutura dos utilizadores para extrair o nome do perfil relacional
+        # Extrai o nome do tipo/perfil da tabela relacional bd_tipos_utilizador
         users_flat = []
         for user in users_data:
             item = dict(user)
-            info_perfil = item.get("bd_perfis_acesso") or {}
-            item["perfil_nome"] = info_perfil.get("nome", item.get("perfil", "Atleta"))
+            info_tipo = item.get("bd_tipos_utilizador") or {}
+            item["perfil_nome"] = info_tipo.get("nome", item.get("perfil", "Atleta"))
             users_flat.append(item)
 
         df_users = pd.DataFrame(users_flat)
@@ -45,7 +45,7 @@ class UserController:
 
         df_atividades = pd.DataFrame(atividades_data)
 
-        # Compatibilidade com a coluna legada de distância
+        # Compatibilidade com nome legado de coluna
         if 'distancia_km' not in df_atividades.columns and 'km_corridos' in df_atividades.columns:
             df_atividades['distancia_km'] = df_atividades['km_corridos']
 
