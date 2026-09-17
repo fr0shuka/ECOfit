@@ -1,37 +1,56 @@
-# EcoFit - Plataforma de análise de atividades
+# EcoFit - Plataforma de Análise de Atividades e Hábitos Saudáveis
 
-Este projeto é a construção de uma aplicação SaaS para monitorização de hábitos e atividade física. Desenvolvido como projeto prático de validação para o referencial de **Nível 5 RVCC em Ciência de Dados e Sistemas de Informação**.
+Aplicação SaaS desenvolvida como projeto prático de validação para o referencial de **Nível 5 RVCC em Ciência de Dados e Sistemas de Informação**.
 
-A aplicação utiliza uma arquitetura puramente assente no padrão **MVC (Model-View-Controller)** para garantir o isolamento de responsabilidades, segurança dos dados e escalabilidade do código.
+A arquitetura do sistema segue rigorosamente o padrão **MVC (Model-View-Controller)**, garantindo o isolamento de responsabilidades, a modularidade do código e a integridade relacional dos dados.
 
 ---
 
 ## 🛠️ Tecnologias Utilizadas
 
-*   **Linguagem:** Python 3.14+
-*   **Interface Web (Frontend):** Streamlit
-*   **Base de Dados & Autenticação (Backend):** Supabase (PostgreSQL via HTTPS)
+* **Linguagem:** Python 3.14+
+* **Interface Web (Frontend):** Streamlit
+* **Base de Dados & Autenticação (Backend):** Supabase (PostgreSQL em Arquitetura Relacional 3NF)
+* **Serviços & Integrações:** APIs Meteorológicas em tempo real, gestão de eventos desportivos e processamento de ficheiros (GPX, FIT, CSV, etc.)
 
 ---
 
 ## 🏗️ Estrutura do Projeto (MVC)
 
-O código encontra-se organizado de forma modular seguindo as boas práticas:
+O código encontra-se organizado modularmente de acordo com a seguinte árvore de diretórios:
 
 ```text
 ecofit/
 ├── .streamlit/
-│   └── secrets.toml          # Credenciais locais protegidas (ignoradas no Git)
+│   └── secrets.toml            # Configuração segura e credenciais locais
 ├── config/
-│   └── database.py           # Inicialização segura do cliente Supabase
+│   ├── __init__.py
+│   └── database.py             # Inicialização e ligação ao cliente Supabase
 ├── controllers/
-│   ├── auth_controller.py    # Controlo de sessão e logins
-│   └── admin_controller.py   # Validação sintática (Regex) e lógica de registos
+│   ├── __init__.py
+│   ├── admin_controller.py     # Lógica de gestão administrativa e validações
+│   ├── auth_controller.py      # Controlo de sessões e autenticação de utilizadores
+│   ├── file_controller.py      # Processamento e importação de ficheiros de atividade
+│   └── user_controller.py      # Gestão de dados globais e rankings de utilizadores
 ├── models/
-│   └── user_model.py         # Queries SQL / API Directas à tabela bd_utilizadores
+│   ├── __init__.py
+│   ├── activity_model.py       # Interações de dados para treinos e hábitos
+│   └── user_model.py           # Operações de dados para perfis e utilizadores
+├── services/
+│   ├── __init__.py
+│   ├── news_service.py         # Integração de notícias e eventos desportivos
+│   └── weather_service.py      # Integração de meteorologia por geolocalização
 ├── views/
-│   ├── login_view.py         # Interfaces das abas de login e novos pedidos
-│   ├── admin_view.py         # Painel restrito de aprovação para perfis Admin
-│   └── dashboard_view.py     # Área de trabalho provisória do Atleta
-├── app.py                    # Orquestrador principal da aplicação (Routing)
-└── requirements.txt          # Dependências do ecossistema para Deploy Cloud
+│   ├── __init__.py
+│   ├── admin_analytics_view.py # Painel estatístico avançado para administradores
+│   ├── admin_view.py           # Gestão de pedidos pendentes e perfis (Atleta, Atleta Pro, Admin)
+│   ├── components.py           # Elementos reutilizáveis de interface (ex: meteorologia na sidebar)
+│   ├── dashboard_view.py       # Registo de atividades físicas e hábitos saudáveis
+│   ├── login_view.py           # Interface de autenticação e novos registos
+│   ├── my_trainings_view.py    # Histórico, listagem detalhada, edição e eliminação de registos
+│   ├── upload_view.py          # Zona de sincronização de ficheiros de treino
+│   └── users_view.py           # Classificação geral e líderes da comunidade
+├── .gitignore                  # Ficheiros e pastas ignoradas pelo controlo de versões
+├── app.py                      # Orquestrador principal da aplicação (Routing e Sessão)
+├── README.md                   # Documentação do projeto
+└── requirements.txt            # Dependências do ecossistema Python
