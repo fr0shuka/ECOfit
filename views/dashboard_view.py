@@ -20,7 +20,7 @@ class DashboardView:
                 [data-testid="stMetric"] {
                     background-color: #1e222a !important;
                     border: 1px solid #2e3440 !important;
-                    border-left: 4px solid #FF4B4B !important; /* Verde EcoFit */
+                    border-left: 4px solid #FF4B4B !important;
                     padding: 12px 14px !important;
                     border-radius: 6px !important;
                     transition: all 0.2s ease-in-out !important;
@@ -48,8 +48,6 @@ class DashboardView:
                     font-weight: 700 !important;
                     color: #ffffff !important;
                 }
-
-                
             </style>
         """, unsafe_allow_html=True)
 
@@ -59,15 +57,32 @@ class DashboardView:
         DashboardView._injetar_estilos()
         temp_real = WeatherService.obter_temperatura_atual()
         
+        # Obter modalidades da BD
+        tipos_atividade = ActivityModel.obter_tipos_atividade()
+        if not tipos_atividade:
+            st.error("Nenhuma modalidade disponível na base de dados.")
+            return
+
+        mapa_modalidades = {t["nome"]: t for t in tipos_atividade}
+
         # --- ZONA 1: FORMULÁRIO DE REGISTO MANUAL ---
-        st.markdown("Registo de Atividade")
+        st.markdown("### Registo de Atividade")
         st.caption("Insira os dados do treino e hábitos diários.")
         
         with st.form("form_atividade", clear_on_submit=True):
+            col_mod, col_clima = st.columns(2)
+            
+            with col_mod:
+                modalidade_nome = st.selectbox("Modalidade", list(mapa_modalidades.keys()))
+                modalidade_obj = mapa_modalidades[modalidade_nome]
+            
+            with col_clima:
+                condicao_clima = st.selectbox("Condição Atmosférica", ["Ensolarado", "Nublado", "Chuvoso", "Vento", "Frio"])
+
             col1, col2 = st.columns(2)
             
             with col1:
-                km = st.number_input("Quilómetros Corridos (km)", min_value=0.0, step=0.1)
+                distancia = st.number_input("Distância (km)", min_value=0.0, step=0.1)
                 
                 col_h, col_m = st.columns(2)
                 with col_h:
@@ -79,32 +94,38 @@ class DashboardView:
                 copos = st.number_input("Copos de Água", min_value=0, step=1)
                 fruta = st.number_input("Peças de Fruta", min_value=0, step=1)
 
-            submetido = st.form_submit_button("Salvar Atividade", type="primary", width="stretch")
+            submetido = st.form_submit_button("Salvar Atividade", type="primary", use_container_width=True)
             
             if submetido:
                 total_minutos = int((horas * 60) + minutos_input)
                 
-                if km == 0 and total_minutos == 0 and copos == 0 and fruta == 0:
+                if distancia == 0 and total_minutos == 0 and copos == 0 and fruta == 0:
                     st.warning("Preencha pelo menos um dos campos para registar a atividade.")
                 else:
                     id_utilizador = st.session_state['utilizador_logado']['utilizador_id']
-                    pontos = int((km * 10) + (total_minutos * 1) + (copos * 2) + (fruta * 5))
+                    
+                    # Cálculo com o fator da modalidade
+                    fator = float(modalidade_obj.get("fator_pontuacao", 1.0))
+                    pontos_treino = (distancia * 10 + total_minutos * 1) * fator
+                    pontos_habitos = (copos * 2) + (fruta * 5)
+                    pontos_totais = int(pontos_treino + pontos_habitos)
                     
                     payload = {
                         "utilizador_id": id_utilizador,
+                        "tipo_atividade_id": modalidade_obj["tipo_atividade_id"],
                         "data_registo": str(date.today()),
-                        "km_corridos": km,
+                        "distancia_km": distancia,
                         "minutos_treino": total_minutos,
                         "copos_agua": copos,
                         "pecas_fruta": fruta,
-                        "pontos_ganhos": pontos,
+                        "pontos_ganhos": pontos_totais,
                         "tipo_insercao": "Manual",
-                        "temperatura": float(temp_real),
-                        "condicao_clima": "Manual"
+                        "temperatura": float(temp_real) if temp_real else None,
+                        "condicao_clima": condicao_clima
                     }
                     
                     if ActivityModel.salvar_atividade(payload):
-                        st.toast(f"Atividade registada com sucesso (+{pontos} pts).", icon=None)
+                        st.toast(f"Atividade registada com sucesso (+{pontos_totais} pts).")
                         st.rerun()
 
         st.markdown("---")
@@ -124,16 +145,24 @@ class DashboardView:
             st.info("Não existem atividades registadas para este utilizador.")
             return
 
-        df = pd.DataFrame(registos_brutos)
+        # Achatar a estrutura do JOIN para facilidade no Pandas
+        dados_flat = []
+        for reg in registos_brutos:
+            item = dict(reg)
+            info_modalidade = item.get("bd_tipos_atividade") or {}
+            item["modalidade"] = info_modalidade.get("nome", "N/A")
+            dados_flat.append(item)
+
+        df = pd.DataFrame(dados_flat)
         df['data_registo'] = pd.to_datetime(df['data_registo'])
-        df['km_corridos'] = pd.to_numeric(df['km_corridos'], errors='coerce').fillna(0)
-        df['minutos_treino'] = pd.to_numeric(df['minutos_treino'], errors='coerce').fillna(0)
-        df['copos_agua'] = pd.to_numeric(df['copos_agua'], errors='coerce').fillna(0)
+        df['distancia_km'] = pd.to_numeric(df.get('distancia_km', 0), errors='coerce').fillna(0)
+        df['minutos_treino'] = pd.to_numeric(df.get('minutos_treino', 0), errors='coerce').fillna(0)
+        df['copos_agua'] = pd.to_numeric(df.get('copos_agua', 0), errors='coerce').fillna(0)
         df['pecas_fruta'] = pd.to_numeric(df.get('pecas_fruta', 0), errors='coerce').fillna(0)
-        df['pontos_ganhos'] = pd.to_numeric(df['pontos_ganhos'], errors='coerce').fillna(0)
+        df['pontos_ganhos'] = pd.to_numeric(df.get('pontos_ganhos', 0), errors='coerce').fillna(0)
         df = df.sort_values(by='data_registo', ascending=True)
 
-      # 1. Cálculo formatado do tempo (Minutos -> Horas e Minutos)
+        # 1. Cálculo formatado do tempo
         total_minutos = int(df['minutos_treino'].sum())
         horas = total_minutos // 60
         minutos_resto = total_minutos % 60
@@ -144,8 +173,8 @@ class DashboardView:
 
         col1.metric(
             label="Distância", 
-            value=f"{df['km_corridos'].sum():.1f} km",
-            help="Total de quilómetros percorridos em corridas e caminhadas."
+            value=f"{df['distancia_km'].sum():.1f} km",
+            help="Total de quilómetros percorridos acumulados."
         )
 
         col2.metric(
@@ -169,21 +198,22 @@ class DashboardView:
         col5.metric(
             label="Pontos", 
             value=f"{int(df['pontos_ganhos'].sum())} pts",
-            help="Pontuação total acumulada com base nas atividades registadas."
+            help="Pontuação total acumulada com base nas atividades e modalidades."
         )
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Gráfico Executivo com Plotly
-        df_diario = df.groupby(df['data_registo'].dt.strftime('%Y-%m-%d'))['pontos_ganhos'].sum().reset_index()
+        # Gráfico Executivo com Plotly (Pontos por Data e Modalidade)
+        df_diario = df.groupby([df['data_registo'].dt.strftime('%Y-%m-%d'), 'modalidade'])['pontos_ganhos'].sum().reset_index()
         
         fig_bar = px.bar(
             df_diario,
             x='data_registo',
             y='pontos_ganhos',
-            title="Evolução Diária de Pontuações",
-            labels={'data_registo': 'Data', 'pontos_ganhos': 'Pontos'},
-            color_discrete_sequence=['#4da6ff']
+            color='modalidade',
+            title="Evolução Diária de Pontuações por Modalidade",
+            labels={'data_registo': 'Data', 'pontos_ganhos': 'Pontos', 'modalidade': 'Modalidade'},
+            color_discrete_sequence=px.colors.qualitative.Set2
         )
         fig_bar.update_layout(
             paper_bgcolor='rgba(0,0,0,0)',
@@ -195,4 +225,4 @@ class DashboardView:
         )
         
         with st.container(border=True):
-            st.plotly_chart(fig_bar, width="stretch")
+            st.plotly_chart(fig_bar, use_container_width=True)
