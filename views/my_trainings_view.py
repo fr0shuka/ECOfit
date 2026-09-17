@@ -6,15 +6,15 @@ class MyTrainingsView:
     @staticmethod
     def renderizar(utilizador_id, utilizador_nome="Atleta"):
         """
-        Renderiza a vista de histórico, tabela e edição de treinos com mapeamento descritivo e dados completos.
+        Renderiza a vista de histórico, tabela e edição, distinguindo treinos físicos de registos exclusivos de hábitos.
         """
-        st.subheader("Os Meus Treinos")
+        st.subheader("Os Meus Registos e Treinos")
 
         # 1. Obter dados via ActivityModel
         atividades = ActivityModel.buscar_por_utilizador(utilizador_id)
 
         if not atividades:
-            st.info("Ainda não registou nenhuma atividade. Utilize a aba 'Inserir Atividade' para começar!")
+            st.info("Ainda não registou nenhuma atividade ou hábito. Utilize as abas de inserção para começar!")
             return
 
         df_treinos = pd.DataFrame(atividades)
@@ -32,7 +32,6 @@ class MyTrainingsView:
 
         col_min = 'minutos_treino' if 'minutos_treino' in df_treinos.columns else ('minutos' if 'minutos' in df_treinos.columns else 'duracao_min')
 
-        # Dicionário de mapeamento para transformar IDs de tipo de atividade em nomes legíveis
         mapa_tipos_atividade = {
             1: "Corrida",
             2: "Ciclismo",
@@ -41,14 +40,30 @@ class MyTrainingsView:
             5: "Outro"
         }
 
-        # Criar coluna descritiva legível para a atividade
+        # Função inteligente para detetar se é um registo exclusivo de hábitos ou treino físico
         def obter_nome_atividade(row):
+            km = float(row.get(col_km, 0.0) or 0.0)
+            mins = int(row.get(col_min, 0) or 0)
+            agua = int(row.get('copos_agua', 0) or 0)
+            fruta = int(row.get('pecas_fruta', 0) or 0)
+
+            # Se não tem km nem minutos, mas tem água ou fruta, é um registo exclusivo de hábitos
+            if km == 0 and mins == 0:
+                if agua > 0 and fruta > 0:
+                    return "💧🍎 Hidratação & Fruta"
+                elif agua > 0:
+                    return "💧 Hidratação (Água)"
+                elif fruta > 0:
+                    return "🍎 Nutrição (Fruta)"
+
+            # Caso contrário, mapeia o tipo de atividade física habitual
             for c_tipo in ['tipo_atividade', 'modalidade', 'tipo_atividade_id', 'atividade_id_tipo']:
                 if c_tipo in row and pd.notnull(row[c_tipo]):
                     val = row[c_tipo]
                     if isinstance(val, (int, float)) or str(val).isdigit():
                         return mapa_tipos_atividade.get(int(val), f"Atividade #{val}")
                     return str(val)
+            
             return "Sessão de Treino"
 
         df_treinos['nome_atividade_legivel'] = df_treinos.apply(obter_nome_atividade, axis=1)
@@ -58,7 +73,7 @@ class MyTrainingsView:
             df_treinos[col_data] = pd.to_datetime(df_treinos[col_data], errors='coerce')
             df_treinos = df_treinos.sort_values(by=col_data, ascending=False)
 
-        # 3. Métricas
+        # 3. Métricas globais
         total_registos = len(df_treinos)
         distancia_total = df_treinos[col_km].sum() if col_km in df_treinos.columns else 0.0
         duracao_total_min = int(df_treinos[col_min].sum()) if col_min in df_treinos.columns else 0
@@ -68,51 +83,49 @@ class MyTrainingsView:
         tempo_total_str = f"{h_sync}h {m_sync}m" if h_sync > 0 else f"{m_sync} min"
 
         col1, col2, col3 = st.columns(3)
-        col1.metric("Atividades", f"{total_registos}")
-        col2.metric("Distância", f"{distancia_total:.2f} km")
-        col3.metric("Tempo", tempo_total_str)
+        col1.metric("Registos Totais", f"{total_registos}")
+        col2.metric("Distância Acumulada", f"{distancia_total:.2f} km")
+        col3.metric("Tempo Total", tempo_total_str)
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.divider()
 
-        # 4. Tabela de Apresentação (Apenas Data sem horas e Nome legível)
-        st.markdown("##### Listagem de Atividades")
+        # 4. Tabela de Apresentação
+        st.markdown("##### Histórico Geral")
         df_exibicao = df_treinos.copy()
         
         if col_data in df_exibicao.columns:
-            df_exibicao['Data'] = df_exibicao[col_data].dt.strftime('%d/%m/%Y')  # Removidas as horas
+            df_exibicao['Data'] = df_exibicao[col_data].dt.strftime('%d/%m/%Y')
             
-        df_exibicao['Atividade'] = df_exibicao['nome_atividade_legivel']
+        df_exibicao['Registo / Atividade'] = df_exibicao['nome_atividade_legivel']
         df_exibicao['Distância (km)'] = df_exibicao[col_km]
         df_exibicao['Duração (min)'] = df_exibicao[col_min]
 
-        cols = [c for c in ['Data', 'Atividade', 'Distância (km)', 'Duração (min)'] if c in df_exibicao.columns]
+        cols = [c for c in ['Data', 'Registo / Atividade', 'Distância (km)', 'Duração (min)'] if c in df_exibicao.columns]
         st.dataframe(df_exibicao[cols], width="stretch", hide_index=True)
 
         st.divider()
 
-        # 5. Edição e Eliminação Individual (Com detalhes alargados: Temperatura, Água, Fruta, etc.)
+        # 5. Edição e Eliminação Individual
         st.markdown("##### Gerir / Editar Registos")
         for _, treino in df_treinos.iterrows():
             t_id = treino.get(col_id)
             t_data_val = treino.get(col_data)
             t_data_str = t_data_val.strftime('%d/%m/%Y') if pd.notnull(t_data_val) else str(treino.get('data_registo', ''))[:10]
-            t_tipo = treino.get('nome_atividade_legivel', 'Treino')
+            t_tipo = treino.get('nome_atividade_legivel', 'Registo')
             t_km = float(treino.get(col_km, 0.0))
             
             t_min_raw = treino.get(col_min, 1)
             t_min = int(t_min_raw) if pd.notnull(t_min_raw) and int(t_min_raw) > 0 else 1
 
-            # Informação extra para exibir no expander
             t_temp = treino.get('temperatura', 'N/D')
-            t_agua = treino.get('copos_agua', 0)
-            t_fruta = treino.get('pecas_fruta', 0)
+            t_agua = int(treino.get('copos_agua', 0) or 0)
+            t_fruta = int(treino.get('pecas_fruta', 0) or 0)
             t_pontos = treino.get('pontos_ganhos', 0)
 
             titulo_expander = f"{t_data_str} — {t_tipo} ({t_km} km | {t_min} min)"
 
             with st.expander(titulo_expander, expanded=False):
-                # Informações detalhadas do treino
                 st.caption(f"🌡️ **Temperatura:** {t_temp} °C | 💧 **Água:** {t_agua} copos | 🍎 **Fruta:** {t_fruta} peças | ⭐ **Pontos:** {t_pontos}")
                 
                 with st.form(key=f"form_edit_{t_id}"):
@@ -141,7 +154,7 @@ class MyTrainingsView:
                             st.rerun()
 
         #######
-        # EXPORTAR HISTÓRICO DE TREINOS (CSV)
+        # EXPORTAR HISTÓRICO (CSV)
         #######
         st.divider()
         st.markdown("##### 📥 Exportar Histórico")
@@ -160,10 +173,10 @@ class MyTrainingsView:
             st.download_button(
                 label="Descarregar Histórico em CSV",
                 data=csv_data,
-                file_name=f"historico_treinos_utilizador_{utilizador_id}_{nome_limpo}.csv",
+                file_name=f"historico_registos_utilizador_{utilizador_id}_{nome_limpo}.csv",
                 mime="text/csv",
                 width="stretch",
                 key="btn_download_csv_trainings"
             )
         else:
-            st.info("Sem registos de treinos disponíveis para exportação.")
+            st.info("Sem registos disponíveis para exportação.")
