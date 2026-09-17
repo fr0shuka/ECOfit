@@ -44,7 +44,7 @@ else:
         
         st.markdown("---")
         
-        # 🔑 Formulário de Alteração de Palavra-Passe
+        # Expandir: Alterar Palavra-Passe
         with st.expander("🔑 Alterar Palavra-passe"):
             with st.form(key="form_alterar_passe_sidebar", clear_on_submit=True):
                 p_atual = st.text_input("Palavra-passe Atual", type="password", key="p_atual")
@@ -56,6 +56,30 @@ else:
                 if btn_guardar_passe:
                     u_id = utilizador.get('utilizador_id') or utilizador.get('id')
                     if AuthController.alterar_palavra_passe(u_id, p_atual, p_nova, p_conf):
+                        st.rerun()
+
+        # Expandir: Plano de Subscrição
+        with st.expander("⭐ Plano de Subscrição"):
+            perfil_atual = utilizador.get('perfil', 'Atleta')
+            st.write(f"**Plano Atual:** `{perfil_atual}`")
+            
+            # Opções de subscrição
+            opcoes_plano = ["Atleta Free", "Atleta Pro"]
+            index_padrao = 1 if "Pro" in perfil_atual else 0
+            
+            novo_plano = st.selectbox(
+                "Mudar de Plano:", 
+                opcoes_plano, 
+                index=index_padrao,
+                key="select_plano_sub"
+            )
+            
+            if st.button("Confirmar Alteração de Plano", use_container_width=True, key="btn_mudar_plano"):
+                if novo_plano == perfil_atual:
+                    st.info("Já se encontra neste plano.")
+                else:
+                    u_id = utilizador.get('utilizador_id') or utilizador.get('id')
+                    if AuthController.alterar_plano_subscricao(u_id, novo_plano):
                         st.rerun()
 
         st.markdown("---")

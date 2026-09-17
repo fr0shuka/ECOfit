@@ -117,3 +117,21 @@ class AuthController:
         else:
             st.error("Erro ao atualizar a palavra-passe na base de dados.")
             return False
+
+
+    @staticmethod
+    def alterar_plano_subscricao(utilizador_id: int, novo_plano: str) -> bool:
+        """Processa a alteração do plano de subscrição do utilizador."""
+        if not novo_plano:
+            st.error("Selecione um plano válido.")
+            return False
+
+        if UserModel.atualizar_perfil(utilizador_id, novo_plano):
+            # Atualiza o perfil na sessão ativa do Streamlit
+            st.session_state['utilizador_logado']['perfil'] = novo_plano
+            st.success(f"🎉 Plano atualizado para **{novo_plano}** com sucesso!")
+            time.sleep(1.5)
+            return True
+        else:
+            st.error("Erro ao atualizar o plano de subscrição.")
+            return False
