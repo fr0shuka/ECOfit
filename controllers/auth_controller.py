@@ -1,16 +1,17 @@
-import sys
 import os
+import sys
 import time
 import streamlit as st
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from models.user_model import UserModel
 from controllers.admin_controller import AdminController
+from models.user_model import UserModel
+
 
 class AuthController:
     @staticmethod
     def login(nome_utilizador: str, palavra_passe: str) -> bool:
-        """Processa o login do utilizador validando nome e palavra-passe."""
+        """Processa o login do utilizador validando nome, palavra-passe e estado de aprovação."""
         nome_limpo = nome_utilizador.strip()
         passe_limpa = palavra_passe.strip()
         
@@ -18,7 +19,7 @@ class AuthController:
             st.warning("Por favor, preenche o nome e a palavra-passe.")
             return False
             
-        # 1. Procurar utilizador por nome na BD
+        # 1. Procurar utilizador por nome na BD (traz relações de perfil)
         utilizador = UserModel.buscar_por_nome(nome_limpo)
         
         if not utilizador:
@@ -26,7 +27,6 @@ class AuthController:
             return False
             
         # 2. Validar a Palavra-passe
-        # Suporta contas antigas sem palavra-passe definida ou valida a correspondência exata
         pwd_guardada = utilizador.get('palavra_passe')
         if pwd_guardada and pwd_guardada != passe_limpa:
             st.error("🔒 Palavra-passe incorreta.")
@@ -58,7 +58,7 @@ class AuthController:
 
     @staticmethod
     def logout():
-        """Limpa a sessão atual."""
+        """Limpa a sessão do utilizador atual."""
         if 'utilizador_logado' in st.session_state:
             del st.session_state['utilizador_logado']
 
@@ -85,7 +85,6 @@ class AuthController:
             time.sleep(1.5)
             return False
 
-
     @staticmethod
     def alterar_palavra_passe(utilizador_id: int, passe_atual: str, nova_passe: str, confirma_passe: str) -> bool:
         """Valida e processa a alteração de palavra-passe do utilizador logado."""
@@ -109,7 +108,6 @@ class AuthController:
 
         # Efetuar a alteração
         if UserModel.alterar_palavra_passe(utilizador_id, nova_passe):
-            # Atualizar a sessão local
             st.session_state['utilizador_logado']['palavra_passe'] = nova_passe.strip()
             st.success("🔒 Palavra-passe alterada com sucesso!")
             time.sleep(1.5)
@@ -118,18 +116,21 @@ class AuthController:
             st.error("Erro ao atualizar a palavra-passe na base de dados.")
             return False
 
-
     @staticmethod
-    def alterar_plano_subscricao(utilizador_id: int, novo_plano: str) -> bool:
-        """Processa a alteração do plano de subscrição do utilizador."""
-        if not novo_plano:
+    def alterar_plano_subscricao(utilizador_id: int, novo_perfil_id: int) -> bool:
+        """Processa a alteração do plano/perfil de subscrição do utilizador por ID relacional."""
+        if not novo_perfil_id:
             st.error("Selecione um plano válido.")
             return False
 
-        if UserModel.atualizar_perfil(utilizador_id, novo_plano):
-            # Atualiza o perfil na sessão ativa do Streamlit
-            st.session_state['utilizador_logado']['perfil'] = novo_plano
-            st.success(f"🎉 Plano atualizado para **{novo_plano}** com sucesso!")
+        if UserModel.atualizar_perfil(utilizador_id, novo_perfil_id):
+            # Recarregar os dados do utilizador atualizados com a relação do novo perfil
+            utilizador_atualizado = UserModel.obter_por_id(utilizador_id)
+            if utilizador_atualizado:
+                st.session_state['utilizador_logado'] = utilizador_atualizado
+
+            info_perfil = (st.session_state['utilizador_logado'].get('bd_perfis_acesso') or {}).get('nome', 'Perfil Atualizado')
+            st.success(f"🎉 Plano atualizado para **{info_perfil}** com sucesso!")
             time.sleep(1.5)
             return True
         else:

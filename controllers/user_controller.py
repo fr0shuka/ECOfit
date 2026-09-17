@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import pandas as pd
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -9,19 +9,28 @@ from models.user_model import UserModel
 class UserController:
     @staticmethod
     def obter_dados_ranking() -> pd.DataFrame:
-        """Soma as atividades por utilizador mapeando os nomes exatos das colunas da BD."""
+        """Soma as atividades por utilizador mapeando os nomes exatos das colunas da BD relacional."""
         users_data, atividades_data = UserModel.obter_utilizadores_e_atividades()
         
         if not users_data:
             return pd.DataFrame()
             
-        df_users = pd.DataFrame(users_data)
+        # Achatar estrutura dos utilizadores para extrair o nome do perfil relacional
+        users_flat = []
+        for user in users_data:
+            item = dict(user)
+            info_perfil = item.get("bd_perfis_acesso") or {}
+            item["perfil_nome"] = info_perfil.get("nome", item.get("perfil", "Atleta"))
+            users_flat.append(item)
+
+        df_users = pd.DataFrame(users_flat)
         col_id_user = 'utilizador_id' if 'utilizador_id' in df_users.columns else 'id'
 
         # Mapeamento: 'coluna_na_bd': 'coluna_esperada_na_view'
         mapeamento_colunas = {
             'pontos_ganhos': 'pontos',
-            'km_corridos': 'kms',
+            'distancia_km': 'kms',
+            'minutos_treino': 'minutos',
             'copos_agua': 'agua',
             'pecas_fruta': 'fruta'
         }
@@ -35,6 +44,11 @@ class UserController:
             return df_users
 
         df_atividades = pd.DataFrame(atividades_data)
+
+        # Compatibilidade com a coluna legada de distância
+        if 'distancia_km' not in df_atividades.columns and 'km_corridos' in df_atividades.columns:
+            df_atividades['distancia_km'] = df_atividades['km_corridos']
+
         colunas_reais = list(mapeamento_colunas.keys())
 
         # Converter colunas numéricas da BD
@@ -61,5 +75,9 @@ class UserController:
 
         # Preencher com 0 os utilizadores que ainda não têm atividades registadas
         df_ranking[colunas_view] = df_ranking[colunas_view].fillna(0)
+
+        # Ordenar por pontos em ordem decrescente
+        if 'pontos' in df_ranking.columns:
+            df_ranking = df_ranking.sort_values(by='pontos', ascending=False)
 
         return df_ranking

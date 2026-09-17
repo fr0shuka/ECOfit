@@ -1,9 +1,9 @@
-import pandas as pd
-import time
 import json
+import time
 import xml.etree.ElementTree as ET
-import streamlit as st
 from datetime import date
+import pandas as pd
+import streamlit as st
 from models.activity_model import ActivityModel
 from services.weather_service import WeatherService
 
@@ -153,22 +153,32 @@ class FileController:
 
     @staticmethod
     def _gravar_atividade_importada(km: float, minutos: int, nome_fonte: str, data_real: str = None) -> bool:
-        """Aplica a regra de pontos do EcoFit e envia para a Base de Dados."""
+        """Aplica a regra de pontos do EcoFit considerando o tipo de atividade por omissão e envia para a BD."""
         id_utilizador = st.session_state['utilizador_logado']['utilizador_id']
-        pontos = int((km * 10) + (minutos * 1))
+        
+        # Obter tipo de atividade padrão para importações (ex: "Corrida" ou o primeiro disponível)
+        tipos_atividade = ActivityModel.obter_tipos_atividade()
+        tipo_padrao = next((t for t in tipos_atividade if t['nome'].lower() == 'corrida'), tipos_atividade[0] if tipos_atividade else None)
 
+        if not tipo_padrao:
+            st.error("Nenhuma modalidade configurada na base de dados.")
+            return False
+
+        fator = float(tipo_padrao.get("fator_pontuacao", 1.0))
+        pontos = int(((km * 10) + (minutos * 1)) * fator)
         temp_atual = WeatherService.obter_temperatura_atual()
 
         payload = {
             "utilizador_id": id_utilizador,
+            "tipo_atividade_id": tipo_padrao["tipo_atividade_id"],
             "data_registo": data_real if data_real else str(date.today()),
-            "km_corridos": km,
+            "distancia_km": km,
             "minutos_treino": minutos,
             "copos_agua": 0,
             "pecas_fruta": 0,
             "pontos_ganhos": pontos,
             "tipo_insercao": "Ficheiro",
-            "temperatura": temp_atual,
+            "temperatura": float(temp_atual) if temp_atual is not None else None,
             "condicao_clima": "Sincronizado"
         }
 
@@ -176,19 +186,31 @@ class FileController:
 
     @staticmethod
     def obter_historico_atividades_ficheiro(utilizador_id: int) -> pd.DataFrame:
-        """Obtém as atividades carregadas e organiza-as para a vista."""
+        """Obtém as atividades carregadas via ficheiro e organiza-as para a vista."""
         registos = ActivityModel.obter_ficheiros_carregados(utilizador_id)
 
         if not registos:
             return pd.DataFrame()
 
-        df = pd.DataFrame(registos)
+        # Normalizar a junção relacional do Supabase
+        dados_flat = []
+        for reg in registos:
+            item = dict(reg)
+            info_modalidade = item.get("bd_tipos_atividade") or {}
+            item["modalidade"] = info_modalidade.get("nome", "N/A")
+            dados_flat.append(item)
+
+        df = pd.DataFrame(dados_flat)
 
         if 'tipo_insercao' in df.columns:
             df = df[df['tipo_insercao'].str.lower() == 'ficheiro']
 
         if df.empty:
             return pd.DataFrame()
+
+        # Tratar compatibilidade de colunas
+        if 'distancia_km' not in df.columns:
+            df['distancia_km'] = df.get('km_corridos', 0.0)
 
         if 'data_registo' in df.columns:
             df['data_registo'] = pd.to_datetime(df['data_registo']).dt.strftime('%d/%m/%Y')
