@@ -84,3 +84,36 @@ class AuthController:
             st.error("Erro ao submeter o pedido. Tente novamente.")
             time.sleep(1.5)
             return False
+
+
+    @staticmethod
+    def alterar_palavra_passe(utilizador_id: int, passe_atual: str, nova_passe: str, confirma_passe: str) -> bool:
+        """Valida e processa a alteração de palavra-passe do utilizador logado."""
+        if not passe_atual or not nova_passe or not confirma_passe:
+            st.error("Preenche todos os campos da palavra-passe.")
+            return False
+
+        if nova_passe != confirma_passe:
+            st.error("A nova palavra-passe e a confirmação não coincidem.")
+            return False
+
+        if len(nova_passe.strip()) < 4:
+            st.error("A nova palavra-passe deve ter pelo menos 4 carateres.")
+            return False
+
+        # Validar se a palavra-passe atual está correta
+        utilizador = UserModel.obter_por_id(utilizador_id)
+        if utilizador and utilizador.get('palavra_passe') != passe_atual.strip():
+            st.error("A palavra-passe atual está incorreta.")
+            return False
+
+        # Efetuar a alteração
+        if UserModel.alterar_palavra_passe(utilizador_id, nova_passe):
+            # Atualizar a sessão local
+            st.session_state['utilizador_logado']['palavra_passe'] = nova_passe.strip()
+            st.success("🔒 Palavra-passe alterada com sucesso!")
+            time.sleep(1.5)
+            return True
+        else:
+            st.error("Erro ao atualizar a palavra-passe na base de dados.")
+            return False

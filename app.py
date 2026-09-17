@@ -5,7 +5,6 @@ ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 if ROOT_DIR not in sys.path:
     sys.path.insert(0, ROOT_DIR)
 
-    
 import streamlit as st
 from views.login_view import LoginView
 from views.dashboard_view import DashboardView
@@ -16,6 +15,7 @@ from views.admin_analytics_view import AdminAnalyticsView
 from views.my_trainings_view import MyTrainingsView
 from views.components import renderizar_meteo_sidebar
 from services.news_service import renderizar_galeria_eventos
+from controllers.auth_controller import AuthController
 
 # Configuração da página
 st.set_page_config(
@@ -23,8 +23,6 @@ st.set_page_config(
     page_icon="🌱", 
     layout="centered"
 )
-
-
 
 # Fluxo de navegação baseado no estado da sessão
 if 'utilizador_logado' not in st.session_state:
@@ -35,7 +33,7 @@ else:
     # Barra Lateral
     with st.sidebar:
         st.markdown(f"### Olá, **{utilizador['nome']}**")
-        st.caption(f"Perfil: {utilizador['perfil']} | Estado: {utilizador['estado']}")
+        st.caption(f"Perfil: {utilizador.get('perfil', 'Atleta')} | Estado: {utilizador.get('estado', 'Aprovado')}")
         st.markdown("---")
 
         menu_opcao = st.sidebar.radio(
@@ -43,12 +41,29 @@ else:
             ["Painel Principal", "Os Meus Treinos"],
             index=0
         )
+        
+        st.markdown("---")
+        
+        # 🔑 Formulário de Alteração de Palavra-Passe
+        with st.expander("🔑 Alterar Palavra-passe"):
+            with st.form(key="form_alterar_passe_sidebar", clear_on_submit=True):
+                p_atual = st.text_input("Palavra-passe Atual", type="password", key="p_atual")
+                p_nova = st.text_input("Nova Palavra-passe", type="password", key="p_nova")
+                p_conf = st.text_input("Confirmar Nova", type="password", key="p_conf")
+                
+                btn_guardar_passe = st.form_submit_button("Atualizar", use_container_width=True)
+                
+                if btn_guardar_passe:
+                    u_id = utilizador.get('utilizador_id') or utilizador.get('id')
+                    if AuthController.alterar_palavra_passe(u_id, p_atual, p_nova, p_conf):
+                        st.rerun()
+
+        st.markdown("---")
             
         # Widget meteorológico
         renderizar_meteo_sidebar()
 
         if st.button("Terminar Sessão (Logout)", use_container_width=True):
-            from controllers.auth_controller import AuthController
             AuthController.logout()
             st.rerun()
 
@@ -62,7 +77,7 @@ else:
         
     else:
         # Navegação por Perfil
-        if utilizador['perfil'] == 'Admin':
+        if utilizador.get('perfil') == 'Admin':
             # Admin visualiza 5 abas (incluindo a Analítica Global)
             aba_app, aba_upload, aba_user, aba_analytics, aba_admin = st.tabs([
                 "Inserir Atividade", 

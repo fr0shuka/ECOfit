@@ -154,3 +154,17 @@ class UserModel:
         except Exception as e:
             print(f"Erro ao eliminar utilizador: {e}")
             return False
+
+    @staticmethod
+    def alterar_palavra_passe(utilizador_id: int, nova_palavra_passe: str) -> bool:
+        """Atualiza a palavra-passe do utilizador na base de dados."""
+        try:
+            supabase = get_supabase_client()
+            supabase.table("bd_utilizadores") \
+                .update({"palavra_passe": nova_palavra_passe.strip()}) \
+                .eq("utilizador_id", utilizador_id) \
+                .execute()
+            return True
+        except Exception as e:
+            print(f"❌ ERRO AO ALTERAR PALAVRA-PASSE: {e}")
+            return False
