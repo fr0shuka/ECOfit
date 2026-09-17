@@ -11,30 +11,55 @@ class UserModel:
     ############ 
     @staticmethod
     def autenticar(nome: str, palavra_passe: str):
-        """Valida a entrada do utilizador comparando nome e palavra-passe com a relação de tipo/perfil."""
+        """Valida a entrada do utilizador comparando nome e palavra-passe."""
         try:
             supabase = get_supabase_client()
-            resposta = supabase.table('bd_utilizadores') \
-                .select('*, bd_tipos_utilizador(*)') \
+            
+            # Tenta primeiro a consulta com o JOIN relacional
+            try:
+                resposta = supabase.table('bd_utilizadores') \
+                    .select('*, bd_tipos_utilizador(*)') \
+                    .eq('nome', nome.strip()) \
+                    .eq('palavra_passe', palavra_passe.strip()) \
+                    .execute()
+                if resposta.data:
+                    return resposta.data[0]
+            except Exception as inner_e:
+                print(f"Aviso no JOIN de perfis: {inner_e}")
+
+            # Fallback: Consulta simples sem JOIN caso a relação no Supabase ainda não esteja configurada
+            resposta_fallback = supabase.table('bd_utilizadores') \
+                .select('*') \
                 .eq('nome', nome.strip()) \
                 .eq('palavra_passe', palavra_passe.strip()) \
                 .execute()
-            
-            return resposta.data[0] if resposta.data else None
+                
+            return resposta_fallback.data[0] if resposta_fallback.data else None
+
         except Exception as e:
             print(f"Erro ao autenticar utilizador: {e}")
             return None
 
     @staticmethod
     def buscar_por_nome(nome: str):
-        """Busca um utilizador pelo nome exato trazendo os dados do seu tipo relacional."""
+        """Busca um utilizador pelo nome exato."""
         try:
             supabase = get_supabase_client()
-            resposta = supabase.table('bd_utilizadores') \
-                .select('*, bd_tipos_utilizador(*)') \
+            try:
+                resposta = supabase.table('bd_utilizadores') \
+                    .select('*, bd_tipos_utilizador(*)') \
+                    .eq('nome', nome.strip()) \
+                    .execute()
+                if resposta.data:
+                    return resposta.data[0]
+            except Exception:
+                pass
+
+            resposta_fallback = supabase.table('bd_utilizadores') \
+                .select('*') \
                 .eq('nome', nome.strip()) \
                 .execute()
-            return resposta.data[0] if resposta.data else None
+            return resposta_fallback.data[0] if resposta_fallback.data else None
         except Exception as e:
             print(f"Erro ao buscar utilizador por nome: {e}")
             return None
@@ -45,13 +70,13 @@ class UserModel:
         try:
             supabase = get_supabase_client()
             resposta = supabase.table('bd_utilizadores') \
-                .select('*, bd_tipos_utilizador(*)') \
+                .select('*') \
                 .eq('utilizador_id', utilizador_id) \
                 .execute()
             
             if not resposta.data:
                 resposta = supabase.table('bd_utilizadores') \
-                    .select('*, bd_tipos_utilizador(*)') \
+                    .select('*') \
                     .eq('id', utilizador_id) \
                     .execute()
             return resposta.data[0] if resposta.data else None
@@ -78,7 +103,7 @@ class UserModel:
         try:
             supabase = get_supabase_client()
             resposta = supabase.table('bd_utilizadores') \
-                .select('*, bd_tipos_utilizador(*)') \
+                .select('*') \
                 .order('utilizador_id', desc=False) \
                 .execute()
             return resposta.data or []
@@ -92,7 +117,7 @@ class UserModel:
         try:
             supabase = get_supabase_client()
             resposta = supabase.table("bd_utilizadores") \
-                .select("*, bd_tipos_utilizador(*)") \
+                .select("*") \
                 .ilike("estado", estado) \
                 .execute()
             return resposta.data or []
@@ -106,7 +131,7 @@ class UserModel:
         try:
             supabase = get_supabase_client()
             res_users = supabase.table("bd_utilizadores") \
-                .select("*, bd_tipos_utilizador(*)") \
+                .select("*") \
                 .ilike("estado", "aprovado") \
                 .execute()
             res_atividades = supabase.table("bd_atividades").select("*").execute()
@@ -138,7 +163,6 @@ class UserModel:
         try:
             supabase = get_supabase_client()
             
-            # Se não for passado um tipo_id, obtém o primeiro ID por defeito de bd_tipos_utilizador
             if not tipo_id:
                 res_tipo = supabase.table("bd_tipos_utilizador").select("tipo_id").limit(1).execute()
                 if res_tipo.data:
