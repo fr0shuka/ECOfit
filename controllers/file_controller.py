@@ -12,14 +12,14 @@ class FileController:
 
     @staticmethod
     def processar_ficheiro(ficheiro_carregado, utilizador_id: int = None, tipo_atividade_escolhido_id: int = None) -> bool:
-        """Deteta o tipo de ficheiro (CSV, Excel, JSON, GPX, TCX) e extrai a telemetria e tipo de desporto."""
+        """Deteta automaticamente o tipo de desporto no ficheiro ou recorre à escolha manual."""
         if ficheiro_carregado is None:
             return False
 
         nome_ficheiro = ficheiro_carregado.name.lower()
         km, minutos = 0.0, 0
         data_real = None
-        tipo_detectado_id = tipo_atividade_escolhido_id
+        tipo_detectado_id = None
 
         try:
             # --- CASO 1: Exportação em CSV ou TXT ---
@@ -40,9 +40,9 @@ class FileController:
                     total_tempo = df[col_tempo].sum()
                     minutos = int(total_tempo / 60) if total_tempo > 500 else int(total_tempo)
                     
-                    # Tentar detetar o tipo de desporto no ficheiro se não foi explicitamente escolhido
-                    if not tipo_detectado_id and col_tipo and not df[col_tipo].empty:
-                        valor_tipo = str(df[col_tipo].iloc[0]).strip().lower()
+                    # Deteção automática prioritária no CSV
+                    if col_tipo and not df[col_tipo].empty:
+                        valor_tipo = str(df[col_tipo].iloc[0]).strip()
                         tipo_detectado_id = FileController._mapear_string_para_tipo_id(valor_tipo)
                 else:
                     st.error("❌ CSV inválido. Não foram encontradas colunas de 'distância' ou 'tempo'.")
@@ -62,8 +62,8 @@ class FileController:
                     total_tempo = df[col_tempo].sum()
                     minutos = int(total_tempo / 60) if total_tempo > 500 else int(total_tempo)
 
-                    if not tipo_detectado_id and col_tipo and not df[col_tipo].empty:
-                        valor_tipo = str(df[col_tipo].iloc[0]).strip().lower()
+                    if col_tipo and not df[col_tipo].empty:
+                        valor_tipo = str(df[col_tipo].iloc[0]).strip()
                         tipo_detectado_id = FileController._mapear_string_para_tipo_id(valor_tipo)
                 else:
                     st.error("❌ Ficheiro Excel sem colunas identificáveis de distância e tempo.")
@@ -84,8 +84,8 @@ class FileController:
                     total_tempo = df[col_tempo].sum()
                     minutos = int(total_tempo / 60) if total_tempo > 500 else int(total_tempo)
 
-                    if not tipo_detectado_id and col_tipo and not df[col_tipo].empty:
-                        valor_tipo = str(df[col_tipo].iloc[0]).strip().lower()
+                    if col_tipo and not df[col_tipo].empty:
+                        valor_tipo = str(df[col_tipo].iloc[0]).strip()
                         tipo_detectado_id = FileController._mapear_string_para_tipo_id(valor_tipo)
 
             # --- CASO 4: Atividade Individual em GPX ---
@@ -95,6 +95,11 @@ class FileController:
 
                 conteudo_gpx = ficheiro_carregado.read().decode('utf-8')
                 gpx = gpxpy.parse(conteudo_gpx)
+
+                # Tentar detetar o tipo através da tag metadata ou nome da track no GPX
+                for track in gpx.tracks:
+                    if track.type and not tipo_detectado_id:
+                        tipo_detectado_id = FileController._mapear_string_para_tipo_id(track.type)
 
                 total_metros = 0.0
                 primeiro_tempo = None
@@ -131,10 +136,10 @@ class FileController:
                 tree = ET.parse(ficheiro_carregado)
                 root = tree.getroot()
 
-                # Tentar detetar esporte/tipo de atividade no TCX
+                # Deteção automática rigorosa da tag Sport no TCX (ex: Running, Biking)
                 sport_node = root.find('.//{*}Activity')
-                if sport_node is not None and 'Sport' in sport_node.attrib and not tipo_detectado_id:
-                    sport_str = sport_node.attrib['Sport'].lower()
+                if sport_node is not None and 'Sport' in sport_node.attrib:
+                    sport_str = sport_node.attrib['Sport'].strip()
                     tipo_detectado_id = FileController._mapear_string_para_tipo_id(sport_str)
 
                 laps = root.findall('.//{*}Lap')
@@ -163,9 +168,12 @@ class FileController:
                         time.sleep(1.5)
                         return False
 
+            # Se o ficheiro NÃO trouxe o desporto automaticamente, usamos a escolha manual feita pelo utilizador
+            tipo_final_id = tipo_detectado_id if tipo_detectado_id else tipo_atividade_escolhido_id
+
             # Gravação final se houver dados extraídos com sucesso
             if km > 0 or minutos > 0:
-                return FileController._gravar_atividade_importada(km, minutos, nome_ficheiro, data_real, tipo_detectado_id)
+                return FileController._gravar_atividade_importada(km, minutos, nome_ficheiro, data_real, tipo_final_id)
 
             st.error("Não foi possível extrair métricas válidas deste ficheiro.")
             return False
@@ -176,38 +184,49 @@ class FileController:
 
     @staticmethod
     def _mapear_string_para_tipo_id(texto: str) -> int:
-        """Mapeia uma string de desporto para o ID correspondente na base de dados."""
+        """Mapeia inteligentemente strings de desporto (inglês/português) para os IDs da BD."""
         tipos = ActivityModel.obter_tipos_atividade()
         if not tipos:
             return 1
         
-        texto = texto.lower()
+        texto_lower = texto.lower()
+        
+        # Mapeamento direto de termos comuns em dispositivos (Garmin/Strava)
+        dicionario_conversao = {
+            'running': 'corrida',
+            'run': 'corrida',
+            'biking': 'ciclismo',
+            'cycling': 'ciclismo',
+            'bike': 'ciclismo',
+            'walking': 'caminhada',
+            'walk': 'caminhada',
+            'gym': 'ginásio',
+            'strength': 'ginásio',
+            'workout': 'ginásio'
+        }
+
+        termo_procurado = dicionario_conversao.get(texto_lower, texto_lower)
+
         for t in tipos:
             nome_t = t.get('nome', '').lower()
-            if nome_t in texto or texto in nome_t:
+            if termo_procurado in nome_t or nome_t in termo_procurado:
                 return t['tipo_atividade_id']
         
-        # Fallback para o primeiro tipo disponível
         return tipos[0]['tipo_atividade_id']
 
     @staticmethod
     def _gravar_atividade_importada(km: float, minutos: int, nome_fonte: str, data_real: str = None, tipo_atividade_id: int = None) -> bool:
-        """Aplica a regra de pontos considerando o tipo de desporto detetado ou selecionado."""
+        """Aplica a regra de pontos considerando o tipo de desporto detetado."""
         id_utilizador = st.session_state['utilizador_logado']['utilizador_id']
         
         tipos_atividade = ActivityModel.obter_tipos_atividade()
         
-        # Selecionar o tipo com base no ID fornecido ou usar 'Corrida' como predefinição
         tipo_escolhido = None
         if tipo_atividade_id:
             tipo_escolhido = next((t for t in tipos_atividade if t['tipo_atividade_id'] == tipo_atividade_id), None)
         
         if not tipo_escolhido:
             tipo_escolhido = next((t for t in tipos_atividade if t['nome'].lower() == 'corrida'), tipos_atividade[0] if tipos_atividade else None)
-
-        if not tipo_escolhido:
-            st.error("Nenhuma modalidade configurada na base de dados.")
-            return False
 
         fator = float(tipo_escolhido.get("fator_pontuacao", 1.0))
         pontos = int(((km * 10) + (minutos * 1)) * fator)
@@ -231,7 +250,6 @@ class FileController:
 
     @staticmethod
     def obter_historico_atividades_ficheiro(utilizador_id: int) -> pd.DataFrame:
-        """Obtém as atividades carregadas via ficheiro e organiza-as para a vista."""
         registos = ActivityModel.obter_ficheiros_carregados(utilizador_id)
 
         if not registos:
