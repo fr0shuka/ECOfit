@@ -82,7 +82,7 @@ else:
                     if AuthController.alterar_plano_subscricao(u_id, novo_plano):
                         st.rerun()
 
-        st.markdown("---")
+        
             
         # Widget meteorológico
         renderizar_meteo_sidebar()
