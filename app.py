@@ -28,9 +28,10 @@ st.set_page_config(
 # Auxiliar para obter o nome do perfil relacional
 def obter_nome_perfil(u: dict) -> str:
     if not u:
-        return "Atleta Free"
+        return "Atleta"
     info_tipo = u.get('bd_tipos_utilizador') or {}
-    return info_tipo.get('nome') or info_tipo.get('descricao') or u.get('perfil') or "Atleta Free"
+    nome = info_tipo.get('nome') or info_tipo.get('descricao') or u.get('perfil') or "Atleta"
+    return "Atleta" if "free" in str(nome).lower() else nome
 
 # Auxiliar para verificar permissão de Admin
 def e_administrador(u: dict) -> bool:
@@ -46,7 +47,6 @@ def e_administrador(u: dict) -> bool:
 if 'utilizador_logado' not in st.session_state:
     LoginView.renderizar_ecran()
 else:
-    # Recarregar utilizador da BD para garantir a sessão sincronizada
     u_sessao = st.session_state['utilizador_logado']
     u_id = u_sessao.get('utilizador_id') or u_sessao.get('id')
     
@@ -91,7 +91,7 @@ else:
         with st.expander("⭐ Plano de Subscrição"):
             st.write(f"**Plano Atual:** `{perfil_nome_exibicao}`")
             
-            opcoes_plano = ["Atleta Free", "Atleta Pro"]
+            opcoes_plano = ["Atleta", "Atleta Pro"]
             index_padrao = 1 if "pro" in perfil_nome_exibicao.lower() else 0
             
             novo_plano = st.selectbox(

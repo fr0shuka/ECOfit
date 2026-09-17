@@ -60,7 +60,7 @@ class AdminView:
 
     @staticmethod
     def _e_admin(utilizador: dict) -> bool:
-        """Verifica se o utilizador possui privilégios de Administrador de forma resiliente."""
+        """Verifica se o utilizador possui privilégios de Administrador."""
         if not utilizador:
             return False
         if utilizador.get('tipo_id') == 4:
@@ -112,7 +112,10 @@ class AdminView:
                     u_nome = p.get('nome', 'Sem Nome')
                     
                     info_tipo = p.get('bd_tipos_utilizador') or {}
-                    perfil_nome = info_tipo.get('nome') or info_tipo.get('descricao') or p.get('perfil', 'Atleta Free')
+                    perfil_nome = info_tipo.get('nome') or info_tipo.get('descricao') or p.get('perfil', 'Atleta')
+                    if "free" in str(perfil_nome).lower():
+                        perfil_nome = "Atleta"
+
                     estado_nome = p.get('estado', 'Pendente')
 
                     with st.container(border=True):
@@ -161,27 +164,27 @@ class AdminView:
                 st.warning("Nenhum utilizador registado na base de dados.")
                 return
 
-            # Carregar tipos de utilizador configurados na BD de forma segura
             tipos_db = UserModel.obter_tipos_utilizador()
             mapa_tipos = {}
             for t in tipos_db:
                 nome_col = t.get('nome') or t.get('descricao') or f"Tipo {t.get('tipo_id')}"
+                if "free" in str(nome_col).lower():
+                    nome_col = "Atleta"
                 mapa_tipos[nome_col] = t.get('tipo_id')
                 
             if not mapa_tipos:
-                mapa_tipos = {"Atleta Free": 1, "Atleta Pro": 2, "Admin": 4}
+                mapa_tipos = {"Atleta": 1, "Atleta Pro": 2, "Admin": 4}
 
-            # Normalizar dados para o DataFrame
             dados_planos = []
             for u in todos_utilizadores:
                 item = dict(u)
                 info_t = item.get('bd_tipos_utilizador') or {}
-                item['Perfil'] = info_t.get('nome') or info_t.get('descricao') or item.get('perfil', 'Atleta')
+                p_nome = info_t.get('nome') or info_t.get('descricao') or item.get('perfil', 'Atleta')
+                item['Perfil'] = "Atleta" if "free" in str(p_nome).lower() else p_nome
                 dados_planos.append(item)
 
             df_users = pd.DataFrame(dados_planos)
 
-            # Métricas Gerais
             total_users = len(df_users)
             total_admins = len(df_users[
                 (df_users['tipo_id'] == 4) | 
@@ -219,7 +222,10 @@ class AdminView:
                 u_id = u.get('utilizador_id')
                 u_nome = u.get('nome', 'Sem Nome')
                 info_t = u.get('bd_tipos_utilizador') or {}
-                u_perfil_nome = info_t.get('nome') or info_t.get('descricao') or u.get('perfil', 'Atleta Free')
+                u_perfil_nome = info_t.get('nome') or info_t.get('descricao') or u.get('perfil', 'Atleta')
+                if "free" in str(u_perfil_nome).lower():
+                    u_perfil_nome = "Atleta"
+
                 u_estado = str(u.get('estado', 'Pendente')).capitalize()
 
                 with st.expander(f"ID #{u_id} — {u_nome} | Perfil: {u_perfil_nome} | Estado: {u_estado}"):
