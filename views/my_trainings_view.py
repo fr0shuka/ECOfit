@@ -6,7 +6,8 @@ class MyTrainingsView:
     @staticmethod
     def renderizar(utilizador_id, utilizador_nome="Atleta"):
         """
-        Renderiza a vista de histórico, tabela e edição, distinguindo treinos físicos de registos exclusivos de hábitos.
+        Renderiza a vista de histórico, tabela, edição e Análise Exploratória de Dados (EDA),
+        distinguindo treinos físicos de registos exclusivos de hábitos.
         """
         st.subheader("Os Meus Registos e Treinos")
 
@@ -47,7 +48,6 @@ class MyTrainingsView:
             agua = int(row.get('copos_agua', 0) or 0)
             fruta = int(row.get('pecas_fruta', 0) or 0)
 
-            # Se não tem km nem minutos, mas tem água ou fruta, é Hábitos Saudáveis
             if km == 0 and mins == 0 and (agua > 0 or fruta > 0):
                 return "Hábitos Saudáveis"
 
@@ -100,7 +100,53 @@ class MyTrainingsView:
 
         st.divider()
 
-        # 5. Edição e Eliminação Individual
+        #################################################################
+        # 5. ANÁLISE
+        #################################################################
+        st.markdown("##### Análise Exploratória de Dados")
+        st.caption("Resumo estatístico rigoroso das métricas de desempenho para avaliação analítica.")
+
+        df_fisico = df_treinos[(df_treinos[col_km] > 0) | (df_treinos[col_min] > 0)]
+
+        if not df_fisico.empty:
+            stats_km = df_fisico[col_km].describe()
+            stats_min = df_fisico[col_min].describe()
+
+            aba_eda_km, aba_eda_min, aba_eda_tabela = st.tabs(["🏃‍♂️ Distância (km)", "⏱️ Duração (min)", "📋 Relatório Descritivo Completo"])
+
+            with aba_eda_km:
+                e1, e2, e3, e4 = st.columns(4)
+                e1.metric("Média (Mean)", f"{stats_km['mean']:.2f} km")
+                e2.metric("Mediana (Q2)", f"{stats_km['50%']:.2f} km")
+                e3.metric("Desvio Padrão", f"{stats_km['std']:.2f}")
+                e4.metric("Máximo (Pico)", f"{stats_km['max']:.2f} km")
+
+            with aba_eda_min:
+                e1, e2, e3, e4 = st.columns(4)
+                e1.metric("Média de Tempo", f"{stats_min['mean']:.1f} min")
+                e2.metric("Mediana (Q2)", f"{stats_min['50%']:.1f} min")
+                e3.metric("Desvio Padrão", f"{stats_min['std']:.1f}")
+                e4.metric("Sessão Mais Longa", f"{stats_min['max']:.0f} min")
+
+            with aba_eda_tabela:
+                df_descritivo = pd.DataFrame({
+                    "Medida Estatística": ["Média (Média Aritmética)", "Desvio Padrão (Dispersão)", "Mínimo", "1º Quartil (Q1 - 25%)", "Mediana (Q2 - 50%)", "3º Quartil (Q3 - 75%)", "Máximo"],
+                    "Distância (km)": [
+                        f"{stats_km['mean']:.2f}", f"{stats_km['std']:.2f}", f"{stats_km['min']:.2f}",
+                        f"{stats_km['25%']:.2f}", f"{stats_km['50%']:.2f}", f"{stats_km['75%']:.2f}", f"{stats_km['max']:.2f}"
+                    ],
+                    "Duração (min)": [
+                        f"{stats_min['mean']:.2f}", f"{stats_min['std']:.2f}", f"{stats_min['min']:.2f}",
+                        f"{stats_min['25%']:.2f}", f"{stats_min['50%']:.2f}", f"{stats_min['75%']:.2f}", f"{stats_min['max']:.2f}"
+                    ]
+                })
+                st.dataframe(df_descritivo, width="stretch", hide_index=True)
+        else:
+            st.info("Registe atividades físicas (com distância ou duração) para calcular as medidas estatísticas descritivas.")
+
+        st.divider()
+
+        # 6. Edição e Eliminação Individual
         st.markdown("##### Gerir / Editar Registos")
         for _, treino in df_treinos.iterrows():
             t_id = treino.get(col_id)
@@ -117,7 +163,6 @@ class MyTrainingsView:
             t_fruta = int(treino.get('pecas_fruta', 0) or 0)
             t_pontos = treino.get('pontos_ganhos', 0)
 
-            # Título do Expander limpo para Hábitos Saudáveis
             if t_tipo == "Hábitos Saudáveis":
                 titulo_expander = f"{t_data_str} — Hábitos Saudáveis"
             else:
@@ -177,4 +222,4 @@ class MyTrainingsView:
                 key="btn_download_csv_trainings"
             )
         else:
-            st.info("Sem registos disponíveis para exportação.")
+            st.info("Sem registos disponíveis para exportação!")
