@@ -203,7 +203,76 @@ class DashboardView:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # Gráfico Executivo com Plotly (Pontos por Data e Modalidade)
+        #######
+        #PREVISÃO#
+        #######
+        def renderizar_previsao_pontucao(df_treinos):
+            """
+            Simulador de previsão de pontuação para o atleta com base no histórico 
+            e regras de negócio do EcoFit (RVCC Nível 5 - Modelação Preditiva Simples).
+            """
+            st.markdown("---")
+            st.markdown("##### 🎯 Simulador Preditivo de Metas e Pontuação")
+            st.caption("Projeção analítica do impacto de novos treinos ou hábitos na pontuação total acumulada.")
+
+            if df_treinos.empty:
+                st.info("Registe atividades para ativar o simulador preditivo.")
+                return
+
+            # 1. Obter pontos atuais do utilizador
+            pontos_totais_atuais = int(df_treinos['pontos_ganhos'].sum()) if 'pontos_ganhos' in df_treinos.columns else 0
+            
+            # 2. Calcular a média de pontos por quilómetro ou por sessão do utilizador (modelo base)
+            df_fisico = df_treinos[(df_treinos['distancia_km'] > 0)]
+            if not df_fisico.empty:
+                media_km_por_treino = df_fisico['distancia_km'].mean()
+                media_pontos_por_treino = df_fisico['pontos_ganhos'].mean()
+            else:
+                media_km_por_treino = 5.0
+                media_pontos_por_treino = 60.0
+
+            # Layout de colunas para o simulador interativo
+            col_sim1, col_sim2 = st.columns(2)
+
+            with col_sim1:
+                st.markdown("###### 🏃‍♂️ Simular por Quilómetros Adicionais")
+                km_extra = st.slider("Quantos km pretende percorrer na próxima meta?", min_value=1.0, max_value=50.0, value=10.0, step=1.0, key="slider_km_extra")
+                
+                # Considerar o fator padrão de corrida (ex: 10 pts/km + 1 pt/min, estimando 6 min/km)
+                min_estimados = km_extra * 6
+                pontos_projetados_km = int((km_extra * 10) + (min_estimados * 1)) # Fator 1.0 de corrida por defeito
+                novo_total_km = pontos_totais_atuais + pontos_projetados_km
+
+                st.info(f"💡 Se realizar **{km_extra} km** (cerca de {int(min_estimados)} min de exercício), irá somar **+{pontos_projetados_km} pontos**, elevando o seu pecúlio para **{novo_total_km} pontos**.")
+
+            with col_sim2:
+                st.markdown("###### 💧🍎 Simular por Hábitos Saudáveis")
+                dias_meta = st.slider("Manter hidratação e fruta rigorosa durante quantos dias?", min_value=1, max_value=30, value=7, step=1, key="slider_dias_habito")
+                
+                # Exemplo: 4 copos de água (20pts) + 2 peças de fruta (20pts) = 40 pts por dia
+                pontos_por_dia_habito = 40 
+                pontos_projetados_habitos = dias_meta * pontos_por_dia_habito
+                novo_total_habitos = pontos_totais_atuais + pontos_projetados_habitos
+
+                st.success(f"🌱 Cumprindo os hábitos durante **{dias_meta} dias**, conquistará **+{pontos_projetados_habitos} pontos**, atingindo um total acumulado de **{novo_total_habitos} pontos**.")
+
+            # Mensagem de objetivo / meta inteligente estilo "atingir o primeiro classificado"
+            st.markdown("<br>", unsafe_allow_html=True)
+            meta_alvo = st.number_input("Definir meta de pontuação:", min_value=100, max_value=10000, value=max(1000, pontos_totais_atuais + 500), step=50)
+            
+            if meta_alvo > pontos_totais_atuais:
+                pontos_em_falta = meta_alvo - pontos_totais_atuais
+                # Estimar quantos treinos médios são necessários
+                treinos_necessarios = max(1, int(pontos_em_falta / max(1, media_pontos_por_treino)))
+                
+                st.warning(f"**Análise de Meta:** Faltam-lhe **{pontos_em_falta} pontos** para atingir o objetivo de **{meta_alvo} pontos**. Com base no seu ritmo histórico, precisará de realizar aproximadamente **{treinos_necessarios} sessões** semelhantes à sua média para lá chegar!")
+            else:
+                st.balloons()
+                st.success("Parabéns! Já ultrapassou a meta de pontuação definida.")
+
+        ######
+        # Gráfico Pontos por Data e Modalidade
+        ######
         df_diario = df.groupby([df['data_registo'].dt.strftime('%Y-%m-%d'), 'modalidade'])['pontos_ganhos'].sum().reset_index()
         
         fig_bar = px.bar(
