@@ -112,35 +112,67 @@ class MyTrainingsView:
             stats_km = df_fisico[col_km].describe()
             stats_min = df_fisico[col_min].describe()
 
-            aba_eda_km, aba_eda_min, aba_eda_tabela = st.tabs(["🏃‍♂️ Distância (km)", "⏱️ Duração (min)", "📋 Relatório Descritivo Completo"])
+            # Funções auxiliares de formatação de tempo para o utilizador
+            def formatar_minutos_para_horas(total_minutos):
+                if pd.isna(total_minutos) or total_minutos <= 0:
+                    return "0 min"
+                h = int(total_minutos // 60)
+                m = int(round(total_minutos % 60))
+                if h > 0:
+                    return f"{h}h {m}m"
+                return f"{m} min"
+
+            aba_eda_km, aba_eda_min, aba_eda_tabela, aba_eda_explicacao = st.tabs([
+                "🏃‍♂️ Distância (km)", 
+                "⏱️ Duração (Tempo)", 
+                "📋 Relatório Completo", 
+                "💡 O que significam estas medidas?"
+            ])
 
             with aba_eda_km:
                 e1, e2, e3, e4 = st.columns(4)
                 e1.metric("Média (Mean)", f"{stats_km['mean']:.2f} km")
                 e2.metric("Mediana (Q2)", f"{stats_km['50%']:.2f} km")
-                e3.metric("Desvio Padrão", f"{stats_km['std']:.2f}")
+                e3.metric("Desvio Padrão", f"{stats_km['std']:.2f} km")
                 e4.metric("Máximo (Pico)", f"{stats_km['max']:.2f} km")
 
             with aba_eda_min:
                 e1, e2, e3, e4 = st.columns(4)
-                e1.metric("Média de Tempo", f"{stats_min['mean']:.1f} min")
-                e2.metric("Mediana (Q2)", f"{stats_min['50%']:.1f} min")
-                e3.metric("Desvio Padrão", f"{stats_min['std']:.1f}")
-                e4.metric("Sessão Mais Longa", f"{stats_min['max']:.0f} min")
+                e1.metric("Média de Tempo", formatar_minutos_para_horas(stats_min['mean']))
+                e2.metric("Mediana (Q2)", formatar_minutos_para_horas(stats_min['50%']))
+                e3.metric("Desvio Padrão", f"{stats_min['std']:.1f} min")
+                e4.metric("Sessão Mais Longa", formatar_minutos_para_horas(stats_min['max']))
 
             with aba_eda_tabela:
+                # Criar dataframe com tempos formatados para legibilidade humana
                 df_descritivo = pd.DataFrame({
                     "Medida Estatística": ["Média (Média Aritmética)", "Desvio Padrão (Dispersão)", "Mínimo", "1º Quartil (Q1 - 25%)", "Mediana (Q2 - 50%)", "3º Quartil (Q3 - 75%)", "Máximo"],
                     "Distância (km)": [
                         f"{stats_km['mean']:.2f}", f"{stats_km['std']:.2f}", f"{stats_km['min']:.2f}",
                         f"{stats_km['25%']:.2f}", f"{stats_km['50%']:.2f}", f"{stats_km['75%']:.2f}", f"{stats_km['max']:.2f}"
                     ],
-                    "Duração (min)": [
-                        f"{stats_min['mean']:.2f}", f"{stats_min['std']:.2f}", f"{stats_min['min']:.2f}",
-                        f"{stats_min['25%']:.2f}", f"{stats_min['50%']:.2f}", f"{stats_min['75%']:.2f}", f"{stats_min['max']:.2f}"
+                    "Duração": [
+                        formatar_minutos_para_horas(stats_min['mean']), 
+                        f"{stats_min['std']:.1f} min", 
+                        formatar_minutos_para_horas(stats_min['min']),
+                        formatar_minutos_para_horas(stats_min['25%']), 
+                        formatar_minutos_para_horas(stats_min['50%']), 
+                        formatar_minutos_para_horas(stats_min['75%']), 
+                        formatar_minutos_para_horas(stats_min['max'])
                     ]
                 })
                 st.dataframe(df_descritivo, width="stretch", hide_index=True)
+
+            with aba_eda_explicacao:
+                st.markdown("""
+                ### Guia Prático das Medidas Estatísticas
+                Utilizam-se os seguintes indicadores:
+
+                * **Média (Tendência Central):** O valor obtido somando todas as observações e dividindo pelo número total. Representa o desempenho médio típico por sessão de treino.
+                * **Mediana / Q2 (Posição Central):** O valor exato que se encontra a meio do conjunto de dados ordenado. Ao contrário da média, **não é afetada por valores extremos** (como um treino excecionalmente longo ou curto).
+                * **Desvio Padrão (Dispersão):** Mede o quão dispersos estão os treinos em relação à média. Um desvio padrão baixo indica consistência e regularidade; um valor alto indica grande variabilidade nos hábitos de treino.
+                * **Quartis (Q1 e Q3):** O 1º Quartil (25%) e o 3º Quartil (75%) dividem a distribuição dos dados, permitindo perceber, por exemplo, qual é o patamar de distância ou tempo que separa os 25% de treinos mais curtos dos restantes.
+                """)
         else:
             st.info("Registe atividades físicas (com distância ou duração) para calcular as medidas estatísticas descritivas.")
 
