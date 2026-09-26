@@ -208,6 +208,8 @@ class DashboardView:
 
         st.markdown("<br>", unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("---")
+        st.markdown("---")
 
         # 4. Gráfico de Pontos por Data e Modalidade
         df_diario = df.groupby([df['data_registo'].dt.strftime('%Y-%m-%d'), 'modalidade'])['pontos_ganhos'].sum().reset_index()
