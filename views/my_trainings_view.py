@@ -177,6 +177,65 @@ class MyTrainingsView:
             st.info("Registe atividades físicas (com distância ou duração) para calcular as medidas estatísticas descritivas.")
 
         st.divider()
+        # #################################################################
+        # 5.1 AltaPerformance 
+        # #################################################################
+        from sklearn.cluster import KMeans
+        from sklearn.preprocessing import StandardScaler
+        import plotly.express as px
+
+        st.markdown("##### Classificação Inteligente do Atleta (IA)")
+        st.caption("Segmentação automática do seu histórico com base na distância, duração e pontos acumulados por sessão.")
+
+        df_ml = df_treinos[(df_treinos[col_km] > 0) | (df_treinos[col_min] > 0)].copy()
+
+        if len(df_ml) >= 3 and 'pontos_ganhos' in df_ml.columns:
+            features_ml = [col_km, col_min, 'pontos_ganhos']
+            X_ml = df_ml[features_ml].fillna(0)
+
+            # Normalização e K-Means
+            scaler_ml = StandardScaler()
+            X_scaled_ml = scaler_ml.fit_transform(X_ml)
+
+            kmeans_ml = KMeans(n_clusters=3, random_state=42, n_init=10)
+            df_ml['cluster_treino'] = kmeans_ml.fit_predict(X_scaled_ml)
+
+            # Mapear os clusters pelo volume médio de pontos
+            cluster_means_ml = df_ml.groupby('cluster_treino')['pontos_ganhos'].mean().sort_values()
+            sorted_ids_ml = cluster_means_ml.index.tolist()
+
+            mapa_perfis_ml = {
+                sorted_ids_ml[0]: "🟢 Sessão Leve / Recuperação",
+                sorted_ids_ml[1]: "🟡 Sessão Moderada",
+                sorted_ids_ml[2]: "🔥 Sessão de Alta Intensidade"
+            }
+            df_ml['perfil_sessao'] = df_ml['cluster_treino'].map(mapa_perfis_ml)
+
+            # Gráfico de dispersão interativo individual
+            fig_ml = px.scatter(
+                df_ml,
+                x=col_km,
+                y='pontos_ganhos',
+                color='perfil_sessao',
+                size=col_min,
+                hover_data=[col_data, col_min],
+                title="Distribuição das Suas Sessões de Treino por Perfil de Intensidade",
+                labels={col_km: "Distância (km)", "pontos_ganhos": "Pontos Ganhos", "perfil_sessao": "Perfil"},
+                color_discrete_sequence=['#4da6ff', '#f59e0b', '#34d399']
+            )
+            fig_ml.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)',
+                plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(family="Inter, sans-serif", size=12, color="#94a3b8"),
+                xaxis=dict(showgrid=True, gridcolor="#2e3440"),
+                yaxis=dict(showgrid=True, gridcolor="#2e3440")
+            )
+            with st.container(border=True):
+                st.plotly_chart(fig_ml, width="stretch")
+        else:
+            st.info("Registe pelo menos 3 atividades físicas consistentes para ativar a segmentação inteligente de sessões por Inteligência Artificial.")
+
+        st.divider()
 
         # 6. Edição e Eliminação Individual
         st.markdown("##### Gerir / Editar Registos")
