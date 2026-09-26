@@ -79,9 +79,22 @@ class AdminAnalyticsView:
             st.info("Não existem dados de atividades registados na plataforma para análise.")
             return
 
+        # Obter todos os utilizadores para mapear o nome através do UserModel
+        lista_utilizadores = UserModel.obter_todos_utilizadores() or []
+        mapa_utilizadores = {
+            u.get('utilizador_id'): u.get('nome', 'Atleta Desconhecido') 
+            for u in lista_utilizadores
+        }
+
         # 4. Tratamento dos Dados com Pandas
         df = pd.DataFrame(dados_brutos)
         
+        # Injetar a coluna 'nome_utilizador' usando o ID
+        if 'utilizador_id' in df.columns:
+            df['nome_utilizador'] = df['utilizador_id'].map(mapa_utilizadores).fillna('Desconhecido')
+        else:
+            df['nome_utilizador'] = 'Desconhecido'
+
         # Compatibilidade de colunas (distancia_km vs km_corridos)
         if 'distancia_km' in df.columns:
             df['distancia_km'] = pd.to_numeric(df['distancia_km'], errors='coerce').fillna(0)
@@ -323,7 +336,7 @@ class AdminAnalyticsView:
 
         colunas_exibir = {
             'data_registo': 'Data',
-            'utilizador_id': 'ID Utilizador',
+            'nome_utilizador': 'Atleta',
             'distancia_km': 'Distância (km)',
             'minutos_treino': 'Duração (min)',
             'temperatura': 'Temp. (°C)',
@@ -353,7 +366,7 @@ class AdminAnalyticsView:
     @staticmethod
     def renderizar_exportador_dados(df_atividades):
         st.markdown("### Exportação de Dados")
-        st.caption("Gere e descarrega o ficheiro consolidado para alimentar os modelos analíticos no Power BI.")
+        st.caption("Descarrega o ficheiro consolidado para análise externa.")
 
         if df_atividades.empty:
             st.warning("Não existem dados disponíveis para exportação.")
@@ -363,9 +376,9 @@ class AdminAnalyticsView:
         csv_data = df_atividades.to_csv(index=False).encode('utf-8')
 
         st.download_button(
-            label="📥 Descarregar Dataset Consolidado (CSV)",
+            label="📥 Descarregar dados (CSV)",
             data=csv_data,
             file_name="ecofit_dados_completos.csv",
             mime="text/csv",
-            help="Clica para exportar todos os registos para análise em Power BI."
+            help="Clica para exportar todos os dados para análise externa."
         )
