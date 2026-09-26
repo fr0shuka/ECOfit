@@ -345,6 +345,11 @@ class AdminAnalyticsView:
             hide_index=True
         )
 
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("---")
+
+        AdminAnalyticsView.renderizar_exportador_dados(df)
+
     @staticmethod
     def renderizar_exportador_dados(df_atividades):
         st.markdown("### Exportação de Dados")
