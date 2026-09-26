@@ -12,7 +12,7 @@ class MyTrainingsView:
                     max-width: 1100px;
                 }
                 
-                /* Cartão do st.metric */
+                /* Cartão do st.metric idêntico ao Dashboard */
                 [data-testid="stMetric"] {
                     background-color: #1e222a !important;
                     border: 1px solid #2e3440 !important;
@@ -46,13 +46,17 @@ class MyTrainingsView:
                 }
             </style>
         """, unsafe_allow_html=True)
+
     @staticmethod
     def renderizar(utilizador_id, utilizador_nome="Atleta"):
         """
         Renderiza a vista de histórico, tabela, edição e Análise Exploratória de Dados (EDA),
         distingüindo treinos físicos de registos exclusivos de hábitos.
         """
-        st.subheader("Os Meus Registos e Treinos")
+        # Injetar os estilos visuais consistentes com o Dashboard
+        MyTrainingsView._injetar_estilos()
+
+        st.subheader("Os meus registos e treinos")
 
         # 1. Obter dados via ActivityModel
         atividades = ActivityModel.buscar_por_utilizador(utilizador_id)
@@ -110,7 +114,7 @@ class MyTrainingsView:
             df_treinos[col_data] = pd.to_datetime(df_treinos[col_data], errors='coerce')
             df_treinos = df_treinos.sort_values(by=col_data, ascending=False)
 
-        # 3. Métricas globais
+        # 3. Métricas globais (Com os cartões estilizados idênticos ao Dashboard)
         total_registos = len(df_treinos)
         distancia_total = df_treinos[col_km].sum() if col_km in df_treinos.columns else 0.0
         duracao_total_min = int(df_treinos[col_min].sum()) if col_min in df_treinos.columns else 0
@@ -155,7 +159,6 @@ class MyTrainingsView:
             stats_km = df_fisico[col_km].describe()
             stats_min = df_fisico[col_min].describe()
 
-            # Funções auxiliares de formatação de tempo para o utilizador
             def formatar_minutos_para_horas(total_minutos):
                 if pd.isna(total_minutos) or total_minutos <= 0:
                     return "0 min"
@@ -220,7 +223,7 @@ class MyTrainingsView:
 
         st.divider()
 
-        # 6. Edição e Eliminação Individual (Cards / Expanders com Configurações)
+        # 6. Edição e Eliminação Individual
         st.markdown("##### Gerir / Editar Registos")
         for _, treino in df_treinos.iterrows():
             t_id = treino.get(col_id)
