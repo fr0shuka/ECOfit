@@ -7,7 +7,7 @@ class MyTrainingsView:
     def renderizar(utilizador_id, utilizador_nome="Atleta"):
         """
         Renderiza a vista de histórico, tabela, edição e Análise Exploratória de Dados (EDA),
-        distinguindo treinos físicos de registos exclusivos de hábitos.
+        distingüindo treinos físicos de registos exclusivos de hábitos.
         """
         st.subheader("Os Meus Registos e Treinos")
 
@@ -100,9 +100,9 @@ class MyTrainingsView:
 
         st.divider()
 
-        #################################################################
+        # #################################################################
         # 5. ANÁLISE
-        #################################################################
+        # #################################################################
         st.markdown("##### Análise Exploratória de Dados")
         st.caption("Resumo estatístico rigoroso das métricas de desempenho para avaliação analítica.")
 
@@ -144,7 +144,6 @@ class MyTrainingsView:
                 e4.metric("Sessão Mais Longa", formatar_minutos_para_horas(stats_min['max']))
 
             with aba_eda_tabela:
-                # Criar dataframe com tempos formatados para legibilidade humana
                 df_descritivo = pd.DataFrame({
                     "Medida Estatística": ["Média (Média Aritmética)", "Desvio Padrão (Dispersão)", "Mínimo", "1º Quartil (Q1 - 25%)", "Mediana (Q2 - 50%)", "3º Quartil (Q3 - 75%)", "Máximo"],
                     "Distância (km)": [
@@ -169,16 +168,16 @@ class MyTrainingsView:
                 Utilizam-se os seguintes indicadores:
 
                 * **Média (Tendência Central):** O valor obtido somando todas as observações e dividindo pelo número total. Representa o desempenho médio típico por sessão de treino.
-                * **Mediana / Q2 (Posição Central):** O valor exato que se encontra a meio do conjunto de dados ordenado. Ao contrário da média, **não é afetada por valores extremos** (como um treino excecionalmente longo ou curto).
-                * **Desvio Padrão (Dispersão):** Mede o quão dispersos estão os treinos em relação à média. Um desvio padrão baixo indica consistência e regularidade; um valor alto indica grande variabilidade nos hábitos de treino.
-                * **Quartis (Q1 e Q3):** O 1º Quartil (25%) e o 3º Quartil (75%) dividem a distribuição dos dados, permitindo perceber, por exemplo, qual é o patamar de distância ou tempo que separa os 25% de treinos mais curtos dos restantes.
+                * **Mediana / Q2 (Posição Central):** O valor exato que se encontra a meio do conjunto de dados ordenado. Ao contrário da média, **não é afetada por valores extremos**.
+                * **Desvio Padrão (Dispersão):** Mede o quão dispersos estão os treinos em relação à média. Um desvio padrão baixo indica consistência e regularidade.
+                * **Quartis (Q1 e Q3):** O 1º Quartil (25%) e o 3º Quartil (75%) dividem a distribuição dos dados, permitindo perceber, por exemplo, o patamar que separa os 25% de treinos mais curtos dos restantes.
                 """)
         else:
             st.info("Registe atividades físicas (com distância ou duração) para calcular as medidas estatísticas descritivas.")
 
         st.divider()
 
-        # 6. Edição e Eliminação Individual
+        # 6. Edição e Eliminação Individual (Cards / Expanders com Configurações)
         st.markdown("##### Gerir / Editar Registos")
         for _, treino in df_treinos.iterrows():
             t_id = treino.get(col_id)
@@ -212,9 +211,9 @@ class MyTrainingsView:
 
                     c_salvar, c_eliminar = st.columns([1, 1])
                     with c_salvar:
-                        btn_salvar = st.form_submit_button("Atualizar", type="primary", width="stretch")
+                        btn_salvar = st.form_submit_button("Atualizar", type="primary")
                     with c_eliminar:
-                        btn_eliminar = st.form_submit_button("Eliminar", width="stretch")
+                        btn_eliminar = st.form_submit_button("Eliminar")
 
                     if btn_salvar:
                         sucesso = ActivityModel.atualizar_atividade(t_id, {col_km: novo_km, col_min: novo_min})
@@ -250,7 +249,6 @@ class MyTrainingsView:
                 data=csv_data,
                 file_name=f"historico_registos_utilizador_{utilizador_id}_{nome_limpo}.csv",
                 mime="text/csv",
-                width="stretch",
                 key="btn_download_csv_trainings"
             )
         else:
