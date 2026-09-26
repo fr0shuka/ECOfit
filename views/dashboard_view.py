@@ -207,8 +207,6 @@ class DashboardView:
         DashboardView.renderizar_previsao_pontucao(df)
 
         st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown("---")
         st.markdown("---")
 
         # 4. Gráfico de Pontos por Data e Modalidade
