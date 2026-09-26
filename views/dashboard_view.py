@@ -206,6 +206,9 @@ class DashboardView:
         # 3. Chamar o Simulador Preditivo
         DashboardView.renderizar_previsao_pontucao(df)
 
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+
         # 4. Gráfico de Pontos por Data e Modalidade
         df_diario = df.groupby([df['data_registo'].dt.strftime('%Y-%m-%d'), 'modalidade'])['pontos_ganhos'].sum().reset_index()
         
