@@ -240,7 +240,7 @@ class DashboardView:
         e regras de negócio do EcoFit (RVCC Nível 5 - Modelação Preditiva Simples).
         """
         st.markdown("---")
-        st.markdown("##### 🎯 Simulador Preditivo de Metas e Pontuação")
+        st.markdown("##### 🎯 Simulador preditivo de Metas e Pontuação")
         st.caption("Projeção analítica do impacto de novos treinos ou hábitos na pontuação total acumulada.")
 
         if df_treinos.empty:
@@ -261,7 +261,7 @@ class DashboardView:
         col_sim1, col_sim2 = st.columns(2)
 
         with col_sim1:
-            st.markdown("###### 🏃‍♂️ Simular por Quilómetros Adicionais")
+            st.markdown("###### 🏃‍♂️ Simular por quilómetros adicionais")
             km_extra = st.slider("Quantos km pretende percorrer na próxima meta?", min_value=1.0, max_value=50.0, value=10.0, step=1.0, key="slider_km_extra")
             
             min_estimados = km_extra * 6
@@ -271,7 +271,7 @@ class DashboardView:
             st.info(f"💡 Se realizar **{km_extra} km** (cerca de {int(min_estimados)} min de exercício), irá somar **+{pontos_projetados_km} pontos**, elevando o seu pecúlio para **{novo_total_km} pontos**.")
 
         with col_sim2:
-            st.markdown("###### 💧🍎 Simular por Hábitos Saudáveis")
+            st.markdown("###### 💧🍎 Simular por hábitos saudáveis")
             dias_meta = st.slider("Manter hidratação e fruta rigorosa durante quantos dias?", min_value=1, max_value=30, value=7, step=1, key="slider_dias_habito")
             
             pontos_por_dia_habito = 40 
