@@ -345,23 +345,22 @@ class AdminAnalyticsView:
             hide_index=True
         )
 
+    @staticmethod
+    def renderizar_exportador_dados(df_atividades):
+        st.markdown("### Exportação de Dados")
+        st.caption("Gere e descarrega o ficheiro consolidado para alimentar os modelos analíticos no Power BI.")
 
+        if df_atividades.empty:
+            st.warning("Não existem dados disponíveis para exportação.")
+            return
 
-    def renderizar_exportador_admin(df_todas_atividades):
-    st.markdown("### Exportação de Dados")
-    st.caption("Descarrega o ficheiro consolidado para análise externa.")
+        # Converter o DataFrame para CSV
+        csv_data = df_atividades.to_csv(index=False).encode('utf-8')
 
-    if df_todas_atividades.empty:
-        st.warning("Não existem dados disponíveis para exportação.")
-        return
-
-    # Converter o DataFrame para CSV
-    csv_data = df_todas_atividades.to_csv(index=False).encode('utf-8')
-
-    st.download_button(
-        label="📥 Descarregar Dataset Consolidado (CSV)",
-        data=csv_data,
-        file_name="ecofit_dados_completos.csv",
-        mime="text/csv",
-        help="Clica para exportar todos os registos para análise em Power BI."
-    )
+        st.download_button(
+            label="📥 Descarregar Dataset Consolidado (CSV)",
+            data=csv_data,
+            file_name="ecofit_dados_completos.csv",
+            mime="text/csv",
+            help="Clica para exportar todos os registos para análise em Power BI."
+        )
