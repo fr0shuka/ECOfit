@@ -52,7 +52,7 @@ def executar_modelo_supervisionado(df_atividades):
 class MLLabView:
     @staticmethod
     def renderizar():
-        st.markdown("### 🧠 Laboratório de Machine Learning (EcoFit)")
+        st.markdown("### Laboratório de Machine Learning")
         st.caption("Implementação prática de algoritmos de aprendizagem supervisionada e não supervisionada.")
 
         res_metricas = ActivityModel.obter_metricas_globais_admin() or {}
@@ -73,10 +73,10 @@ class MLLabView:
         df_ml_global['minutos_treino'] = pd.to_numeric(df_ml_global.get('minutos_treino', 0), errors='coerce').fillna(0)
         df_ml_global['pontos_ganhos'] = pd.to_numeric(df_ml_global.get('pontos_ganhos', 0), errors='coerce').fillna(0)
 
-        aba_nao_sup, aba_sup = st.tabs(["🔍 Não Supervisionada (K-Means)", "📈 Supervisionada (Regressão Linear)"])
+        aba_nao_sup, aba_sup = st.tabs(["Não Supervisionada", "Supervisionada"])
 
         with aba_nao_sup:
-            st.markdown("#### Segmentação de Atividades por K-Means")
+            st.markdown("#### Segmentação de atividades por K-Means")
             df_clusterizado, erro_ns = executar_modelo_nao_supervisionado(df_ml_global)
             if erro_ns:
                 st.warning(erro_ns)
@@ -86,7 +86,7 @@ class MLLabView:
                 st.dataframe(df_clusterizado[cols_mostrar].head(10), hide_index=True)
 
         with aba_sup:
-            st.markdown("#### Previsão de Pontuação (Regressão Linear)")
+            st.markdown("#### Previsão de Pontuação")
             modelo, metricas, erro_s = executar_modelo_supervisionado(df_ml_global)
             if erro_s:
                 st.warning(erro_s)
@@ -95,12 +95,12 @@ class MLLabView:
                 
                 c1, c2, c3 = st.columns(3)
                 c1.metric("Coeficiente de Determinação (R²)", f"{metricas['r2_score']}")
-                c2.metric("Impacto por Km", f"+{metricas['coef_distancia']} pts/km")
-                c3.metric("Impacto por Minuto", f"+{metricas['coef_minutos']} pts/min")
+                c2.metric("Impacto por KM", f"+{metricas['coef_distancia']} pts/km")
+                c3.metric("Impacto por MINUTO", f"+{metricas['coef_minutos']} pts/min")
 
-                st.markdown("##### 🔮 Simular Previsão com o Modelo Treinado")
-                km_input = st.number_input("Distância para previsão (km)", 0.0, 50.0, 5.0)
-                min_input = st.number_input("Duração para previsão (min)", 1, 300, 30)
+                st.markdown("##### Simular Previsã:o")
+                km_input = st.number_input("Distância para previsão (km)", 0.0, 100.0, 10.0)
+                min_input = st.number_input("Duração para previsão (min)", 1, 600, 30)
                 
                 pontos_previstos = modelo.predict([[km_input, min_input]])[0]
                 st.info(f"O modelo supervisionado prevê que esta atividade valerá exatamente **{max(0, int(pontos_previstos))} pontos**.")
