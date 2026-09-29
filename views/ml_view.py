@@ -77,6 +77,7 @@ class MLLabView:
         df_ml_global['minutos_treino'] = pd.to_numeric(df_ml_global.get('minutos_treino', 0), errors='coerce').fillna(0)
         df_ml_global['pontos_ganhos'] = pd.to_numeric(df_ml_global.get('pontos_ganhos', 0), errors='coerce').fillna(0)
 
+        # FILTRO: Excluir registos que tenham 0 km E 0 minutos (ex: hábitos) 
         df_ml_global = df_ml_global[(df_ml_global['distancia_km'] > 0) | (df_ml_global['minutos_treino'] > 0)].copy()
         if df_ml_global.empty:
             st.info("Não existem treinos registados com atividade física (distância ou duração) para treinar os modelos.")
@@ -93,11 +94,13 @@ class MLLabView:
                 st.warning(erro_ns)
             else:
                 st.success("Modelo não supervisionado treinado com sucesso!")
+                # ORDENAÇÃO POR DATA (+ recente primeiro)
                 df_clusterizado['data_registo_dt'] = pd.to_datetime(df_clusterizado['data_registo'], errors='coerce')
                 df_clusterizado = df_clusterizado.sort_values(by='data_registo_dt', ascending=False)
+
                 cols_mostrar = [c for c in ['data_registo', 'distancia_km', 'minutos_treino', 'pontos_ganhos', 'perfil_ia'] if c in df_clusterizado.columns]
                 
-                # MOSTRAR TODOS OS REGISTOS (Removido o .head(10) para não ocultar treinos)
+                # MOSTRAR TODOS OS REGISTOS
                 st.dataframe(df_clusterizado[cols_mostrar], hide_index=True, use_container_width=True)
 
         with aba_sup:
