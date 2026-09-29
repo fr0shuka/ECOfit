@@ -126,13 +126,12 @@ else:
     else:
         # Navegação por Perfil
         if is_admin:
-            # >>> ADICIONAMOS A ABA "Laboratório IA" PARA OS ADMINISTRADORES <<<
             aba_app, aba_upload, aba_user, aba_analytics, aba_ml_lab, aba_admin = st.tabs([
                 "Inserir Atividade", 
                 "Sincronizar Ficheiro", 
                 "Ranking & Utilizadores", 
                 "Analítica Global",
-                "Laboratório IA",         # <--- Nova aba de Machine Learning
+                "Laboratório IA",     
                 "Menu Admin"
             ])
             
@@ -144,7 +143,7 @@ else:
                 UsersView.renderizar()
             with aba_analytics:
                 AdminAnalyticsView.renderizar()
-            with aba_ml_lab:              # <--- Renderiza o laboratório de IA que criámos
+            with aba_ml_lab:             
                 MLLabView.renderizar()
             with aba_admin:
                 AdminView.renderizar_painel_admin()
