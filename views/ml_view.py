@@ -77,6 +77,11 @@ class MLLabView:
         df_ml_global['minutos_treino'] = pd.to_numeric(df_ml_global.get('minutos_treino', 0), errors='coerce').fillna(0)
         df_ml_global['pontos_ganhos'] = pd.to_numeric(df_ml_global.get('pontos_ganhos', 0), errors='coerce').fillna(0)
 
+        df_ml_global = df_ml_global[(df_ml_global['distancia_km'] > 0) | (df_ml_global['minutos_treino'] > 0)].copy()
+        if df_ml_global.empty:
+            st.info("Não existem treinos registados com atividade física (distância ou duração) para treinar os modelos.")
+            return
+
         # 3. Interface por Abas (Tabs)
         aba_nao_sup, aba_sup = st.tabs(["Não Supervisionada", "Supervisionada"])
 
