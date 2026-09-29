@@ -10,6 +10,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from controllers.admin_controller import AdminController
 from models.activity_model import ActivityModel
 from models.user_model import UserModel
+from services.export_service import gerar_csv_completo_powerbi, publicar_csv_online
 
 
 class AdminAnalyticsView:
@@ -382,3 +383,31 @@ class AdminAnalyticsView:
             mime="text/csv",
             help="Clica para exportar todos os dados para análise externa."
         )
+        
+        st.markdown("### 🌐 Sincronização Automática para Power BI (CSV Online)")
+        st.caption("Publica o dataset atualizado na cloud para que o Power BI possa consultar os dados diretamente via URL web.")
+
+        if st.button("🚀 Sincronizar dados para a Nuvem"):
+            with st.spinner("A gerar dataset e a atualizar o link online..."):
+                # 1. Obter dados globais
+                res_metricas = ActivityModel.obter_metricas_globais_admin() or {}
+                dados_globais = res_metricas.get("dados_completos", [])
+                
+                # 2. Gerar string CSV unificada (treinos + hábitos)
+                csv_string = gerar_csv_completo_powerbi(dados_globais)
+                
+                if csv_string:
+                    # 3. Enviar para o Supabase Storage
+                    url_publico, erro = publicar_csv_online(csv_string)
+                    
+                    if erro:
+                        st.error(f"Erro ao publicar online: {erro}")
+                    else:
+                        st.success("Dataset sincronizado com sucesso na nuvem!")
+                        st.info("Copia o link abaixo e usa-o no Power BI (Obter Dados > Web):")
+                        st.code(url_publico, language="text")
+                else:
+                    st.warning("Não existem dados suficientes para publicar.")
+    
+
+    
