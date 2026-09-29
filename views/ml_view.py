@@ -55,39 +55,48 @@ class MLLabView:
         st.markdown("### Laboratório de Machine Learning")
         st.caption("Implementação prática de algoritmos de aprendizagem supervisionada e não supervisionada.")
 
+        # 1. Consulta live ao Supabase
         res_metricas = ActivityModel.obter_metricas_globais_admin() or {}
         atividades_globais = res_metricas.get("dados_completos", [])
-        
+
         if not atividades_globais:
             st.info("Não existem dados suficientes na base de dados para treinar os modelos de Machine Learning.")
             return
 
+        # 2. Tratamento e Sanitização de Dados no Pandas
         df_ml_global = pd.DataFrame(atividades_globais)
         
-        # Normalização básica de colunas
+        # Normalização de colunas de distância
         if 'distancia_km' not in df_ml_global.columns and 'km_corridos' in df_ml_global.columns:
             df_ml_global['distancia_km'] = df_ml_global['km_corridos']
         elif 'distancia_km' not in df_ml_global.columns:
             df_ml_global['distancia_km'] = 0.0
 
+        # Conversão de tipos numéricos
+        df_ml_global['distancia_km'] = pd.to_numeric(df_ml_global.get('distancia_km', 0), errors='coerce').fillna(0)
         df_ml_global['minutos_treino'] = pd.to_numeric(df_ml_global.get('minutos_treino', 0), errors='coerce').fillna(0)
         df_ml_global['pontos_ganhos'] = pd.to_numeric(df_ml_global.get('pontos_ganhos', 0), errors='coerce').fillna(0)
 
+        # 3. Interface por Abas (Tabs)
         aba_nao_sup, aba_sup = st.tabs(["Não Supervisionada", "Supervisionada"])
 
         with aba_nao_sup:
             st.markdown("#### Segmentação de atividades por K-Means")
             df_clusterizado, erro_ns = executar_modelo_nao_supervisionado(df_ml_global)
+            
             if erro_ns:
                 st.warning(erro_ns)
             else:
                 st.success("Modelo não supervisionado treinado com sucesso!")
                 cols_mostrar = [c for c in ['data_registo', 'distancia_km', 'minutos_treino', 'pontos_ganhos', 'perfil_ia'] if c in df_clusterizado.columns]
-                st.dataframe(df_clusterizado[cols_mostrar].head(10), hide_index=True)
+                
+                # MOSTRAR TODOS OS REGISTOS (Removido o .head(10) para não ocultar treinos)
+                st.dataframe(df_clusterizado[cols_mostrar], hide_index=True, use_container_width=True)
 
         with aba_sup:
             st.markdown("#### Previsão de Pontuação")
             modelo, metricas, erro_s = executar_modelo_supervisionado(df_ml_global)
+            
             if erro_s:
                 st.warning(erro_s)
             else:
@@ -98,7 +107,7 @@ class MLLabView:
                 c2.metric("Impacto por KM", f"+{metricas['coef_distancia']} pts/km")
                 c3.metric("Impacto por MINUTO", f"+{metricas['coef_minutos']} pts/min")
 
-                st.markdown("##### Simular Previsã:o")
+                st.markdown("##### Simular Previsão")
                 km_input = st.number_input("Distância para previsão (km)", 0.0, 100.0, 10.0)
                 min_input = st.number_input("Duração para previsão (min)", 1, 600, 30)
                 
