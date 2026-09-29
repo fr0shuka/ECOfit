@@ -218,13 +218,19 @@ class AdminAnalyticsView:
         st.caption("Publica o dataset atualizado na cloud para que o Power BI possa consultar os dados diretamente via URL web.")
 
         if st.button("🚀 Sincronizar dados para a Nuvem", key="btn_sync_cloud"):
-            with st.spinner("A gerar dataset completo e a atualizar o link online..."):
+            with st.spinner("A gerar dataset completo com nomes e a atualizar o link online..."):
+                # 1. Obter dados globais de atividades
                 res_metricas = ActivityModel.obter_metricas_globais_admin() or {}
                 dados_globais = res_metricas.get("dados_completos", [])
                 
-                csv_string = gerar_csv_completo_powerbi(dados_globais)
+                # 2. Obter a lista de utilizadores para o cruzamento de nomes
+                lista_utilizadores = UserModel.obter_todos_utilizadores() or []
+                
+                # 3. Gerar o CSV passando as atividades e os utilizadores
+                csv_string = gerar_csv_completo_powerbi(dados_globais, lista_utilizadores)
                 
                 if csv_string:
+                    # 4. Enviar para o Supabase Storage
                     url_publico, erro = publicar_csv_online(csv_string)
                     
                     if erro:
