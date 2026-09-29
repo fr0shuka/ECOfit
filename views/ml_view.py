@@ -88,6 +88,8 @@ class MLLabView:
                 st.warning(erro_ns)
             else:
                 st.success("Modelo não supervisionado treinado com sucesso!")
+                df_clusterizado['data_registo_dt'] = pd.to_datetime(df_clusterizado['data_registo'], errors='coerce')
+                df_clusterizado = df_clusterizado.sort_values(by='data_registo_dt', ascending=False)
                 cols_mostrar = [c for c in ['data_registo', 'distancia_km', 'minutos_treino', 'pontos_ganhos', 'perfil_ia'] if c in df_clusterizado.columns]
                 
                 # MOSTRAR TODOS OS REGISTOS (Removido o .head(10) para não ocultar treinos)
