@@ -72,39 +72,39 @@ def gerar_csv_completo_powerbi(atividades_globais, utilizadores_globais=None):
     return df.to_csv(index=False, encoding='utf-8-sig')
 
 
-    def publicar_csv_online(csv_string, nome_ficheiro="ecofit_powerbi_dataset.csv"):
-    """
-    Faz o upload ou substitui o ficheiro CSV no bucket do Supabase com upsert=True.
-    """
+def publicar_csv_online(csv_string, nome_ficheiro="ecofit_powerbi_dataset.csv"):
+"""
+Faz o upload ou substitui o ficheiro CSV no bucket do Supabase com upsert=True.
+"""
+try:
+    # Obter credenciais de forma segura através do Streamlit Secrets
+    url = st.secrets["SUPABASE_URL"]
+    key = st.secrets["SUPABASE_KEY"]
+    
+    # Inicializar o cliente do Supabase
+    supabase: Client = create_client(url, key)
+    
+    bucket_name = "export-powerbi"  
+    file_bytes = csv_string.encode('utf-8-sig')
+    
+    # Tentar fazer o upload com upsert para substituir caso já exista
     try:
-        # Obter credenciais de forma segura através do Streamlit Secrets
-        url = st.secrets["SUPABASE_URL"]
-        key = st.secrets["SUPABASE_KEY"]
-        
-        # Inicializar o cliente do Supabase
-        supabase: Client = create_client(url, key)
-        
-        bucket_name = "export-powerbi"  
-        file_bytes = csv_string.encode('utf-8-sig')
-        
-        # Tentar fazer o upload com upsert para substituir caso já exista
-        try:
-            supabase.storage.from_(bucket_name).upload(
-                path=nome_ficheiro,
-                file=file_bytes,
-                file_options={"content-type": "text/csv; charset=utf-8", "upsert": "true"}
-            )
-        except Exception:
-            # Se o upload falhar porque o ficheiro já existe, forçamos o update
-            supabase.storage.from_(bucket_name).update(
-                path=nome_ficheiro,
-                file=file_bytes,
-                file_options={"content-type": "text/csv; charset=utf-8", "upsert": "true"}
-            )
-        
-        # Obter o URL público direto para a web
-        public_url = supabase.storage.from_(bucket_name).get_public_url(nome_ficheiro)
-        return public_url, None
-        
-    except Exception as e:
-        return None, str(e)
+        supabase.storage.from_(bucket_name).upload(
+            path=nome_ficheiro,
+            file=file_bytes,
+            file_options={"content-type": "text/csv; charset=utf-8", "upsert": "true"}
+        )
+    except Exception:
+        # Se o upload falhar porque o ficheiro já existe, forçamos o update
+        supabase.storage.from_(bucket_name).update(
+            path=nome_ficheiro,
+            file=file_bytes,
+            file_options={"content-type": "text/csv; charset=utf-8", "upsert": "true"}
+        )
+    
+    # Obter o URL público direto para a web
+    public_url = supabase.storage.from_(bucket_name).get_public_url(nome_ficheiro)
+    return public_url, None
+    
+except Exception as e:
+    return None, str(e)
