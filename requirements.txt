@@ -7,3 +7,4 @@ gpxpy
 geopy
 streamlit-js-eval
 feedparser
+scikit-learn
