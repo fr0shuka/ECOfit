@@ -1,5 +1,7 @@
 import pandas as pd
 import io
+import streamlit as st
+from supabase import Client, create_client
 
 def gerar_csv_completo_powerbi(atividades_globais):
     """
@@ -54,3 +56,33 @@ def gerar_csv_completo_powerbi(atividades_globais):
 
     # Devolve o CSV em formato texto (UTF-8 com BOM para compatibilidade total com Excel e Power BI)
     return df.to_csv(index=False, encoding='utf-8-sig')
+
+
+def publicar_csv_online(csv_string, nome_ficheiro="ecofit_powerbi_dataset.csv"):
+    """
+    Faz o upload do CSV unificado para o bucket do Supabase Storage
+    e devolve o URL público direto para o Power BI.
+    """
+    try:
+        url = st.secrets["SUPABASE_URL"]
+        key = st.secrets["SUPABASE_KEY"]
+        supabase: Client = create_client(url, key)
+        
+        # Nome exato do bucket criado no Supabase
+        bucket_name = "export-powerbi"  
+        
+        file_bytes = csv_string.encode('utf-8-sig')
+        
+        # Faz upload e substitui o ficheiro anterior (upsert=True)
+        supabase.storage.from_(bucket_name).upload(
+            path=nome_ficheiro,
+            file=file_bytes,
+            file_options={"content-type": "text/csv", "upsert": "true"}
+        )
+        
+        # Obtém o URL público direto para a web
+        public_url = supabase.storage.from_(bucket_name).get_public_url(nome_ficheiro)
+        return public_url, None
+        
+    except Exception as e:
+        return None, str(e)
