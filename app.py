@@ -17,6 +17,7 @@ from views.components import renderizar_meteo_sidebar
 from services.news_service import renderizar_galeria_eventos
 from controllers.auth_controller import AuthController
 from models.user_model import UserModel
+from views.ml_view import MLLabView
 
 # Configuração da página
 st.set_page_config(
