@@ -1,4 +1,4 @@
-# EcoFit API Guide (A1 Level)
+# EcoFit API Guide
 
 ## 1. Introduction
 EcoFit connects to external web services (APIs) to get weather data, news, and business charts.

@@ -1,4 +1,4 @@
-# EcoFit Code Style Guide (A1 Level)
+# EcoFit Code Style Guide
 
 ## 1. Introduction
 This guide shows how to write clean Python code for the EcoFit app. 

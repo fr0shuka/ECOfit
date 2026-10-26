@@ -1,4 +1,4 @@
-# EcoFit Security Guide (A1 Level)
+# EcoFit Security Guide 
 
 ## 1. Introduction
 This file explains how EcoFit protects user data and system files. 

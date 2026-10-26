@@ -1,4 +1,4 @@
-# EcoFit Database Guide (A1 Level)
+# EcoFit Database Guide
 
 ## 1. What Database Does EcoFit Use?
 EcoFit uses **Supabase**. Supabase is a cloud database that uses **PostgreSQL**.
